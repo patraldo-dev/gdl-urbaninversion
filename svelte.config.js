@@ -1,10 +1,9 @@
-import adapter from "@sveltejs/adapter-cloudflare-workers";
+import adapter from "@sveltejs/adapter-cloudflare";
 
-/** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		adapter: adapter({ config: 'wrangler.jsonc' })
-	}
+  kit: {
+    adapter: adapter()
+  }
 };
 
 export default config;

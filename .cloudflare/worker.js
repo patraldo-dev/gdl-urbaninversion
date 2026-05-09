@@ -5864,7 +5864,7 @@ var init__2 = __esm({
   ".svelte-kit/output/server/nodes/1.js"() {
     index2 = 1;
     component2 = async () => component_cache2 ??= (await Promise.resolve().then(() => (init_error_svelte(), error_svelte_exports))).default;
-    imports2 = ["_app/immutable/nodes/1.DjbnEBXi.js", "_app/immutable/chunks/CcFDBPF7.js", "_app/immutable/chunks/muOIn_9Y.js", "_app/immutable/chunks/DTvFLQYg.js", "_app/immutable/chunks/e0yU93JY.js", "_app/immutable/chunks/CF86plgo.js"];
+    imports2 = ["_app/immutable/nodes/1.DylPKoBN.js", "_app/immutable/chunks/CcFDBPF7.js", "_app/immutable/chunks/muOIn_9Y.js", "_app/immutable/chunks/DTvFLQYg.js", "_app/immutable/chunks/W9Llb9Vs.js", "_app/immutable/chunks/CF86plgo.js"];
     stylesheets2 = [];
     fonts2 = [];
   }
@@ -7404,7 +7404,7 @@ var options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1f736ol"
+  version_hash: "nnkqb5"
 };
 async function get_hooks() {
   let handle;
@@ -11624,7 +11624,7 @@ var manifest = (() => {
     assets: /* @__PURE__ */ new Set([".assetsignore", "noise-static.wav", "robots.txt"]),
     mimeTypes: { ".wav": "audio/wav", ".txt": "text/plain" },
     _: {
-      client: { start: "_app/immutable/entry/start.Cevz24U8.js", app: "_app/immutable/entry/app.D60rtj-X.js", imports: ["_app/immutable/entry/start.Cevz24U8.js", "_app/immutable/chunks/e0yU93JY.js", "_app/immutable/chunks/muOIn_9Y.js", "_app/immutable/chunks/CF86plgo.js", "_app/immutable/entry/app.D60rtj-X.js", "_app/immutable/chunks/BcaH-1Bg.js", "_app/immutable/chunks/muOIn_9Y.js", "_app/immutable/chunks/DTvFLQYg.js", "_app/immutable/chunks/CcFDBPF7.js", "_app/immutable/chunks/CF86plgo.js", "_app/immutable/chunks/HW1xx58-.js", "_app/immutable/chunks/C2zwUv3A.js"], stylesheets: [], fonts: [], uses_env_dynamic_public: false },
+      client: { start: "_app/immutable/entry/start.Ceao6fMO.js", app: "_app/immutable/entry/app.BpcJ_IQP.js", imports: ["_app/immutable/entry/start.Ceao6fMO.js", "_app/immutable/chunks/W9Llb9Vs.js", "_app/immutable/chunks/muOIn_9Y.js", "_app/immutable/chunks/CF86plgo.js", "_app/immutable/entry/app.BpcJ_IQP.js", "_app/immutable/chunks/BcaH-1Bg.js", "_app/immutable/chunks/muOIn_9Y.js", "_app/immutable/chunks/DTvFLQYg.js", "_app/immutable/chunks/CcFDBPF7.js", "_app/immutable/chunks/CF86plgo.js", "_app/immutable/chunks/HW1xx58-.js", "_app/immutable/chunks/C2zwUv3A.js"], stylesheets: [], fonts: [], uses_env_dynamic_public: false },
       nodes: [
         __memo(() => Promise.resolve().then(() => (init__(), __exports))),
         __memo(() => Promise.resolve().then(() => (init__2(), __exports2))),
@@ -11667,7 +11667,8 @@ var prerendered = /* @__PURE__ */ new Map([]);
 
 // .svelte-kit/cloudflare-workers-tmp/entry.js
 var import_kv_asset_handler = __toESM(require_dist());
-var static_asset_manifest = {};
+import static_asset_manifest_json from "__STATIC_CONTENT_MANIFEST";
+var static_asset_manifest = JSON.parse(static_asset_manifest_json);
 var server = new Server(manifest);
 var app_path = `/${manifest.appPath}/`;
 var entry_default = {
@@ -11739,17 +11740,20 @@ var entry_default = {
     });
   }
 };
-async function get_asset_from_kv(req, env, context2, map) {
-  // Use Workers Static Assets binding instead of KV
-  const url = new URL(req.url);
-  const assetReq = new Request(url.toString(), req);
-  try {
-    const res = await env.ASSETS.fetch(assetReq);
-    if (res.status === 404) throw new Error('Not found');
-    return res;
-  } catch {
-    return new Response('Not found', { status: 404 });
-  }
+async function get_asset_from_kv(req, env, context2, map = import_kv_asset_handler.mapRequestToAsset) {
+  return await (0, import_kv_asset_handler.getAssetFromKV)(
+    {
+      request: req,
+      waitUntil(promise) {
+        return context2.waitUntil(promise);
+      }
+    },
+    {
+      ASSET_NAMESPACE: env.__STATIC_CONTENT,
+      ASSET_MANIFEST: static_asset_manifest,
+      mapRequestToAsset: map
+    }
+  );
 }
 function is_error(status) {
   return status > 399;
