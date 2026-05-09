@@ -86,6 +86,8 @@ class LocationState {
 
     /** Dev only: fake your position to an anchor's coordinates */
     simulatePosition(lat, lon) {
+        // Stop any active GPS watcher so it doesn't overwrite the simulated position
+        this.stopWatching();
         this.position = { lat, lon, accuracy: 5 };
     }
 

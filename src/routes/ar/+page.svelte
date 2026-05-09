@@ -30,11 +30,17 @@
     // Reticle for AR placement
     let reticlePulse = $state(false);
 
+    // Track position reactively — reading .position ensures $state dependency is tracked
     $effect(() => {
-        const id = locationState.nearbyAnchorId;
-        if (id) {
-            currentAnchor = ANCHORS.find(a => a.id === id) || null;
+        const { lat, lon } = locationState.position;
+        if (lat === 0) return;
+        let nearest = null;
+        let nearestDist = Infinity;
+        for (const anchor of ANCHORS) {
+            const d = haversine(lat, lon, anchor.lat, anchor.lon);
+            if (d < nearestDist) { nearestDist = d; nearest = anchor; }
         }
+        currentAnchor = nearestDist < 50 ? nearest : null;
     });
 
     async function initCamera() {
