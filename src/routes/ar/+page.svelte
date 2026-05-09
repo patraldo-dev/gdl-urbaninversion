@@ -24,7 +24,6 @@
     let showCompass = $state(false);
 
     let status = $state('Inicializando cámara...');
-    let error = $state(null);
 
     // Camera feed for non-AR fallback
     let cameraStream = $state(null);
@@ -58,8 +57,8 @@
             }
             status = 'Cámara activa';
         } catch (e) {
-            error = 'No se pudo acceder a la cámara. Verifica los permisos.';
-            status = 'Sin cámara';
+            // Camera not available (desktop) — continue without it
+            status = 'Sin cámara — modo simulación';
         }
     }
 
@@ -150,6 +149,11 @@
     }
 
     function startFallbackMode() {
+        // Don't start GPS watcher in dev mode — it interferes with simulatePosition
+        if (import.meta.env.DEV) {
+            status = 'Dev mode — usa __loc.simulatePosition(lat, lon)';
+            return;
+        }
         locationState.startWatching();
         status = 'Modo cámara activo';
     }
@@ -288,12 +292,6 @@
                 </div>
             </div>
         </div>
-
-        {#if error}
-        <div class="ar-error">
-            <p>{error}</p>
-        </div>
-        {/if}
     </div>
 
     <!-- AR DOM overlay (for WebXR dom-overlay feature) -->
