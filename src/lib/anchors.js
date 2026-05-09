@@ -1,6 +1,36 @@
 // Anchor points for GDL cultural tour
 export const ANCHORS = [
     {
+        id: 'colegio-san-juan',
+        name: 'Antiguo Colegio de San Juan Bautista',
+        description: 'Epicentro intelectual donde la ciencia jalisciense empezó a mirar a las estrellas. Las primeras observaciones astronómicas serias de la ciudad se gestaron aquí.',
+        lat: 20.6775,
+        lon: -103.3444,
+        year: 1850,
+        narrator: 'Severo Díaz Galindo',
+        type: 'observatory',
+    },
+    {
+        id: 'palacio-gobierno',
+        name: 'Palacio de Gobierno — El Reloj y la Geografía',
+        description: 'Entre 1870 y 1920, centro del poder político y punto de referencia para los ingenieros que trazaban los primeros mapas científicos de Jalisco.',
+        lat: 20.6750,
+        lon: -103.3465,
+        year: 1870,
+        narrator: 'Mariano Bárcena',
+        type: 'institute',
+    },
+    {
+        id: 'templo-expiatorio',
+        name: 'Templo Expiatorio — Ciencia y Gótico',
+        description: 'Triunfo de la ingeniería moderna. Adamo Boari y los ingenieros locales elevaron agujas neogóticas con cálculos precisos en una ciudad aún de un solo piso.',
+        lat: 20.6751,
+        lon: -103.3592,
+        year: 1897,
+        narrator: 'Ignacio Díaz Morales',
+        type: 'memorial',
+    },
+    {
         id: 'observatorio-morelos',
         name: 'Primer Observatorio (1874)',
         description: 'El profesor Lázaro Pérez instaló el primer registro de observación diaria en su casa particular.',
