@@ -3,6 +3,14 @@
     import '@fontsource/playfair-display/700.css';
     import '@fontsource/inter/400.css';
     import '@fontsource/inter/700.css';
+  import { onMount } from 'svelte';
+  import { locationState } from '$lib/location.svelte.js';
+
+  onMount(() => {
+    if (import.meta.env.DEV) {
+      window.__loc = locationState;
+    }
+  });
 
     let { children } = $props();
 </script>
