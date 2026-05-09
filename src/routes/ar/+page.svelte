@@ -4,6 +4,7 @@
     import { ANCHORS } from '$lib/anchors';
     import { locationState } from '$lib/location.svelte.js';
     import { applyRadioEffect } from '$lib/vintage-radio.js';
+    import Capsule from '$lib/components/Capsule.svelte';
 
     let videoEl = $state(null);
     let canvasEl = $state(null);
@@ -15,6 +16,7 @@
     let inAR = $state(false);
 
     let currentAnchor = $state(null);
+    let currentDistance = $state(Infinity);
     let isPlaying = $state(false);
     let radioFx = $state(null);
 
@@ -41,6 +43,7 @@
             if (d < nearestDist) { nearestDist = d; nearest = anchor; }
         }
         currentAnchor = nearestDist < 50 ? nearest : null;
+        currentDistance = nearestDist;
     });
 
     async function initCamera() {
@@ -174,6 +177,11 @@
         if (!xrSupported) {
             startFallbackMode();
         }
+
+        // Listen for capsule play event from Capsule component
+        document.addEventListener('playcapsule', (e) => {
+            playNarration('capsule');
+        });
     });
 
     function getDistanceText() {
@@ -242,6 +250,17 @@
                 </div>
                 {/if}
             </div>
+
+            <!-- Time Capsule (appears within 5m of anchor) -->
+            {#if currentAnchor && currentDistance < 50}
+            <Capsule anchor={currentAnchor} distance={currentDistance}>
+                <div slot="message">
+                    <p>Una cápsula del tiempo de {currentAnchor.narrator} espera ser abierta.</p>
+                    <p style="color:#71717a;font-size:0.75rem;margin-top:0.5rem">Acércate a menos de 5 metros para activarla.</p>
+                </div>
+            </Capsule>
+            {/if}
+
             {:else if locationState.position.lat !== 0}
             <div class="no-anchor">
                 <p>No hay puntos históricos cercanos</p>
