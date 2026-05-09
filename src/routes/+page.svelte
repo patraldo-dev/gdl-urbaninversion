@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { browser } from '$app/environment';
     import { ANCHORS } from '$lib/anchors';
+    import ProximityTrigger from '$lib/components/ProximityTrigger.svelte';
 
     let mapEl = $state(null);
     let mapInstance = $state(null);
@@ -114,6 +115,14 @@
         {/each}
     </div>
 </div>
+
+{#each ANCHORS as anchor}
+    <ProximityTrigger
+        {anchor}
+        radius={50}
+        onEnter={(a) => { selectedAnchor = a; if (mapInstance) mapInstance.flyTo([a.lat, a.lon], 18, { duration: 1 }); }}
+    />
+{/each}
 
 <style>
     .gdl-page {

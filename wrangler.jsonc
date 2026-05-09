@@ -2,5 +2,8 @@
   // GDL Urban Inversion — WebXR cultural tour of Guadalajara's astronomical history
   "name": "gdl-urbaninversion",
   "compatibility_date": "2025-04-01",
-  "pages_build_output_dir": "./build"
+  "pages_build_output_dir": "./build",
+  "ai": {
+    "binding": "AI"
+  }
 }
