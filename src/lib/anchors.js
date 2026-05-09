@@ -1,0 +1,43 @@
+// Anchor points for GDL cultural tour
+export const ANCHORS = [
+    {
+        id: 'observatorio-morelos',
+        name: 'Primer Observatorio (1874)',
+        description: 'El profesor Lázaro Pérez instaló el primer registro de observación diaria en su casa particular.',
+        lat: 20.6750,
+        lon: -103.3500,
+        year: 1874,
+        narrator: 'Lázaro Pérez',
+        type: 'observatory',
+    },
+    {
+        id: 'teatro-degollado',
+        name: 'Observatorio del Teatro Degollado',
+        description: 'Entre 1901 y 1913, la azotea del Teatro Degollado albergó instrumentos astronómicos modernos.',
+        lat: 20.6772,
+        lon: -103.3446,
+        year: 1906,
+        narrator: 'Guía del Teatro',
+        type: 'observatory',
+    },
+    {
+        id: 'iam',
+        name: 'Instituto de Astronomía y Meteorología',
+        description: 'Fundado el 2 de abril de 1889. Severo Díaz Galindo, "padre del clima", lo dirigió desde 1925.',
+        lat: 20.67485,
+        lon: -103.38429,
+        year: 1889,
+        narrator: 'Severo Díaz Galindo',
+        type: 'institute',
+    },
+    {
+        id: 'casa-severo-diaz',
+        name: 'Casa de Severo Díaz Galindo',
+        description: 'Donde vivió el "padre de la meteorología" de Jalisco. Placa conmemorativa en la fachada.',
+        lat: 20.6756,
+        lon: -103.3600,
+        year: 1900,
+        narrator: 'Severo Díaz Galindo',
+        type: 'memorial',
+    },
+];
