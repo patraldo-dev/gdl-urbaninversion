@@ -44,7 +44,7 @@
         isPlaying = true;
 
         try {
-            const res = await fetch(`/api/narrator?scene=${scene}`);
+            const res = await fetch(`/api/narrator?scene=${scene}&anchor=${anchor.id}`);
 
             if (res.headers.get('Content-Type')?.includes('audio')) {
                 // Server-side TTS with vintage radio effect
