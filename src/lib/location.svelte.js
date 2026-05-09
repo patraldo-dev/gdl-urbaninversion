@@ -81,6 +81,11 @@ class LocationState {
         this.watching = false;
     }
 
+/** Dev only: fake your position to an anchor's coordinates */
+simulatePosition(lat, lon) {
+  this.position = { lat, lon, accuracy: 5 };
+}
+
     /** Check if near a specific anchor */
     isNear(anchorId, radiusM = 50) {
         if (this.position.lat === 0) return false;
