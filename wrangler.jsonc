@@ -1,9 +1,14 @@
 {
-  // GDL Urban Inversion — WebXR cultural tour of Guadalajara's astronomical history
-  // "Inversión Urbana" meets "Inmersión" — urbaninversion.com
+  // GDL Urban Inversion — deployed as CF Worker on GDL.urbaninversion.com
+  // NEVER USE PAGES — Ishmael's mandate
   "name": "gdl-urbaninversion",
   "compatibility_date": "2025-04-01",
-  "pages_build_output_dir": "./build",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".cloudflare/worker.js",
+  "assets": {
+    "directory": ".cloudflare/public",
+    "binding": "ASSETS"
+  },
   "ai": {
     "binding": "AI"
   },
@@ -18,6 +23,12 @@
     {
       "binding": "R2_ASSETS",
       "bucket_name": "gdl-astronomy-assets"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "GDL.urbaninversion.com",
+      "custom_domain": true
     }
   ]
 }
