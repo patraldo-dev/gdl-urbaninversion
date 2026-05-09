@@ -5,5 +5,12 @@
   "pages_build_output_dir": "./build",
   "ai": {
     "binding": "AI"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gdl-urbaninversion",
+      "database_id": "06b8a678-1a9a-41c4-933d-c20410dd383a"
+    }
+  ]
 }
