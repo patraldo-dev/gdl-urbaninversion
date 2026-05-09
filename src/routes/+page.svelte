@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { browser } from '$app/environment';
     import { ANCHORS } from '$lib/anchors';
+    import Loader from '$lib/components/Loader.svelte';
 
     let permissionState = $state({ gps: 'pending', camera: 'pending' });
     let gpsGranted = $state(false);
@@ -10,6 +11,17 @@
     let userLon = $state(null);
     let ready = $state(false);
     let loading = $state(false);
+    let loaderProgress = $state(0);
+
+    async function animateLoader() {
+        loading = true;
+        loaderProgress = 0;
+        // Simulate loading phases
+        for (let i = 0; i <= 100; i += 2) {
+            loaderProgress = i;
+            await new Promise(r => setTimeout(r, 30));
+        }
+    }
 
     async function requestGPS() {
         try {
@@ -40,7 +52,7 @@
     }
 
     async function startImmersion() {
-        loading = true;
+        await animateLoader();
         await requestGPS();
         await requestCamera();
         loading = false;
@@ -73,7 +85,33 @@
             esperándote en cada esquina.
         </p>
 
-        {#if !ready}
+        {#if loading}
+        <div class="loader-wrapper">
+            <Loader bind:progress={loaderProgress} />
+        </div>
+        {:else if ready}
+        <div class="immersion-ready">
+            <div class="ready-icon">🔭</div>
+            <h2>Estás listo para la inmersión</h2>
+            <p class="your-location">Tu posición: {userLat?.toFixed(4)}, {userLon?.toFixed(4)}</p>
+
+            <div class="nearby-info">
+                {#each ANCHORS as anchor}
+                    {@const dist = haversine(userLat, userLon, anchor.lat, anchor.lon)}
+                    {#if dist < 1000}
+                    <div class="nearby-card">
+                        <span class="nearby-dist">{Math.round(dist)}m</span>
+                        <strong>{anchor.name}</strong>
+                        <span class="nearby-narrator">{anchor.narrator} te espera</span>
+                    </div>
+                    {/if}
+                {/each}
+            </div>
+
+            <a href="/map" class="btn-explore">🗺️ Abrir el mapa</a>
+            <a href="/ar" class="btn-ar">🥽 Modo Realidad Aumentada</a>
+        </div>
+        {:else}
         <div class="permissions-panel">
             <h2>Para sumergirte necesitas:</h2>
 
@@ -100,34 +138,12 @@
             </div>
 
             <button class="btn-start" onclick={startImmersion} disabled={loading}>
-                {loading ? '⏳ Activando...' : '🌊 Sumérgete en Guadalajara'}
+                🔭 Enfocando el cielo de 1920...
             </button>
 
             {#if permissionState.gps === 'denied'}
             <p class="perm-warning">Necesitamos tu ubicación para activar la experiencia. Habilítala en ajustes del navegador.</p>
             {/if}
-        </div>
-        {:else}
-        <div class="immersion-ready">
-            <div class="ready-icon">🔭</div>
-            <h2>Estás listo para la inmersión</h2>
-            <p class="your-location">Tu posición: {userLat?.toFixed(4)}, {userLon?.toFixed(4)}</p>
-
-            <div class="nearby-info">
-                {#each ANCHORS as anchor}
-                    {@const dist = haversine(userLat, userLon, anchor.lat, anchor.lon)}
-                    {#if dist < 1000}
-                    <div class="nearby-card">
-                        <span class="nearby-dist">{Math.round(dist)}m</span>
-                        <strong>{anchor.name}</strong>
-                        <span class="nearby-narrator">{anchor.narrator} te espera</span>
-                    </div>
-                    {/if}
-                {/each}
-            </div>
-
-            <a href="/map" class="btn-explore">🗺️ Abrir el mapa</a>
-            <a href="/ar" class="btn-ar">🥽 Modo Realidad Aumentada</a>
         </div>
         {/if}
 
@@ -227,6 +243,11 @@
         color: #f59e0b;
         font-size: 0.8rem;
         margin-top: 0.75rem;
+    }
+    .loader-wrapper {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
     }
     .immersion-ready {
         background: rgba(20, 20, 23, 0.6);
