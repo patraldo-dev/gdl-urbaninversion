@@ -1,5 +1,6 @@
 {
   // GDL Urban Inversion — WebXR cultural tour of Guadalajara's astronomical history
+  // "Inversión Urbana" meets "Inmersión" — urbaninversion.com
   "name": "gdl-urbaninversion",
   "compatibility_date": "2025-04-01",
   "pages_build_output_dir": "./build",
@@ -11,6 +12,12 @@
       "binding": "DB",
       "database_name": "gdl-urbaninversion",
       "database_id": "06b8a678-1a9a-41c4-933d-c20410dd383a"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2_ASSETS",
+      "bucket_name": "gdl-astronomy-assets"
     }
   ]
 }
