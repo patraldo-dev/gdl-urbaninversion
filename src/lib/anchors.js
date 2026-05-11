@@ -1,5 +1,7 @@
 // Anchor points for GDL cultural tour
-export const ANCHORS = [
+// Loaded from D1 via /api/anchors — fallback to static data if fetch fails
+
+const STATIC_ANCHORS = [
     {
         id: 'colegio-san-juan',
         name: 'Antiguo Colegio de San Juan Bautista',
@@ -71,3 +73,7 @@ export const ANCHORS = [
         type: 'memorial',
     },
 ];
+
+// Named export for backward compat with map/tour pages
+export const ANCHORS = STATIC_ANCHORS;
+export default STATIC_ANCHORS;
