@@ -14,6 +14,7 @@ Durable Object memory; D1 stores k-anonymized counts.
 | `workers/presence` | `@urbaninversion/presence` | Worker + `PresenceCell` Durable Object (WebSocket Hibernation, alarms) + D1 flush. |
 | `apps/web` | SvelteKit | Marketing/info site on Workers Static Assets; serves `/` and hosts the XR bundle at `/xr`. |
 | `apps/xr` | IWSDK app | XR client. Scaffolded with `npm create @iwsdk@latest`; device logic behind a `DeviceProfile` adapter (Meta VR Glasses + Simulated). |
+| `apps/gdl` | `@urbaninversion/gdl` | GDL astronomy AR tour on `GDL.urbaninversion.com` (worker `urbaninversion-gdl`, staging `urbaninversion-gdl-staging` on `staging-gdl.urbaninversion.com`). Imported 2026-10-21 from the standalone `gdl-urbaninversion` repo; its full history lives on the `legacy-scaffold` branch. |
 
 ## Language
 
