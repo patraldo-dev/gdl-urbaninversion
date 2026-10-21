@@ -204,7 +204,7 @@ must NOT carry `x-robots-tag` (`/xr/*` keeps its noindex by design).
 
 ## 11. CI/CD — GitHub → Cloudflare
 
-Repo: `github.com/patraldo-dev/gdl-urbaninversion` (main = this monorepo;
+Repo: `github.com/patraldo-dev/urbaninversion.com` (main = this monorepo;
 the previous GDL AR-tour project is preserved on the `legacy-scaffold`
 branch). Three workflows in `.github/workflows/`:
 
