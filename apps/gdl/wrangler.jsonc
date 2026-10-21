@@ -14,10 +14,10 @@
   // inside the deploy via node directly — no package manager invocation,
   // no PATH or registry round-trip, bundle always fresh from pushed source.
   "build": {
-    "command": "node node_modules/vite/bin/vite.js build",
-    // Only build this worker when the app or the lockfile changes.
-    "watch_paths": ["apps/gdl/**", "pnpm-lock.yaml"]
+    "command": "node node_modules/vite/bin/vite.js build"
   },
+  // Build watch paths are set in the DASHBOARD (wrangler 4.151 rejects
+  // build.watch_paths in config): apps/gdl/**, pnpm-lock.yaml
   // Cost guard: paid-plan default (30 s CPU/invocation) made explicit.
   "limits": { "cpu_ms": 30000 },
   "assets": {

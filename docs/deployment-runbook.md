@@ -297,8 +297,10 @@ presence-staging). `urbaninversion-web` and `urbaninversion-presence` do not
 exist yet as Workers — production deploy is gated behind §9 (apex cutover:
 prod D1 migration + TURNSTILE_SECRET first, then deploy, then detach the
 placeholder's apex custom domain). A worker can't get a build config before
-its first deploy; connect those two rows when §9 runs. Also set
-**Install command: `pnpm install --frozen-lockfile`** in each build config.
+its first deploy; connect those two rows when §9 runs. No Install command field is
+needed — Workers Builds auto-detects pnpm from `pnpm-lock.yaml`/
+`packageManager` and runs `pnpm install --frozen-lockfile` itself (verified
+in the first gdl build log, 2026-10-21).
 
 If any other worker still shows failing builds from this repo, disconnect
 its Git integration the same way (the gdl-urbaninversion one is already gone).
@@ -319,8 +321,13 @@ deploy-notifier's ALLOWED_REPOS (gdl-urbaninversion entry is stale post-rename).
   explicitly (the paid-plan default, made explicit so it can't silently
   drift higher). Current workloads are ms-scale — tightening to ~10_000 is
   safe if a harder cap is wanted after the billing review.
-- **Watch paths** (`build.watch_paths`, per worker): gdl → `apps/gdl/**`;
-  web → `apps/web/** + apps/xr/**`; presence → `workers/presence/** +
-  packages/shared/**`; all + `pnpm-lock.yaml`. A worker's build only runs
-  when its paths change. All staging workers + gdl prod redeployed and
-  verified with these configs 2026-10-21.
+- **Watch paths are DASHBOARD-ONLY** (wrangler 4.151 rejects
+  `build.watch_paths` in wrangler.jsonc — verified in build log warnings;
+  removed from configs). Set in worker → Settings → Build → Build watch
+  paths, relative to repo root:
+  gdl prod+staging → `apps/gdl/**, pnpm-lock.yaml`;
+  web-staging → `apps/web/**, apps/xr/**, pnpm-lock.yaml`;
+  presence-staging → `workers/presence/**, packages/shared/**, pnpm-lock.yaml`.
+  A worker's build then only runs when its paths change. First fully
+  push-deployed build (gdl prod via Workers Builds) verified green
+  2026-10-21 23:38, including pnpm auto-detect and the in-deploy vite build.

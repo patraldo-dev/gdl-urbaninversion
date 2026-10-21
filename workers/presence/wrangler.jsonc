@@ -11,11 +11,9 @@
   "compatibility_date": "2026-09-01",
   "workers_dev": false,
   "observability": { "enabled": true },
-  // No build step (plain JS Worker) — watch paths only, so Workers Builds
-  // skips this worker unless its own code, shared, or the lockfile changed.
-  "build": {
-    "watch_paths": ["workers/presence/**", "packages/shared/**", "pnpm-lock.yaml"]
-  },
+  // No build step (plain JS Worker). Build watch paths are set in the
+  // DASHBOARD (wrangler 4.151 rejects build.watch_paths in config):
+  // workers/presence/**, packages/shared/**, pnpm-lock.yaml
   // Cost guard: paid-plan default (30 s CPU/invocation) made explicit.
   // Per-message handling is ms-scale; DO sweeps are the heaviest path.
   "limits": { "cpu_ms": 30000 },
