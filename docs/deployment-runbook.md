@@ -14,9 +14,9 @@ Nothing in this document contains real secrets — placeholders only.
 ## 0. One-time prerequisites
 
 ```sh
-# Node 22.x. Installs need --legacy-peer-deps (npm 10 arborist crashes on
-# this dependency tree otherwise — verified 2026-10-20).
-npm install --no-audit --no-fund --legacy-peer-deps
+# Node 22.x. pnpm (pinned via packageManager in package.json; the npm-era
+# --legacy-peer-deps arborist workaround is obsolete under pnpm).
+pnpm install
 
 # Authenticate wrangler (opens browser), then confirm the account that
 # holds the urbaninversion.com zone:
