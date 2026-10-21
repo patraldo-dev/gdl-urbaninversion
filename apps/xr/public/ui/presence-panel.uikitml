@@ -1,0 +1,81 @@
+<!--
+  Presence state toggle + glanceable status rows. Status rows start hidden
+  and are toggled with display in src/ui/presence-ui.js (only verified
+  setProperties APIs are used; no text-update API is assumed).
+-->
+<style>
+  .panel-root {
+    flex-direction: column;
+    width: 344px;
+  }
+  .panel-content {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 12px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .heading {
+    height: 32px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 24px;
+    color: #272727;
+  }
+  .heading:dark {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .status {
+    font-size: 13px;
+    line-height: 17px;
+    color: #a35b00;
+    margin-top: 4px;
+    display: none;
+  }
+  .status:dark {
+    color: #ffc46b;
+  }
+  .button {
+    justify-content: flex-start;
+    margin-left: 24px;
+    margin-right: 24px;
+    margin-top: 12px;
+  }
+  .button-last {
+    margin-bottom: 24px;
+  }
+</style>
+<Panel class="panel-root">
+  <div class="panel-content">
+    <div class="heading">Your presence</div>
+    <div id="status-coarse" class="status">Location too coarse for individual markers — showing counts only.</div>
+    <div id="status-align" class="status">Alignment: low — walk straight for a few seconds.</div>
+    <div id="status-location-error" class="status">Location unavailable.</div>
+    <div id="status-offline" class="status">Presence offline.</div>
+    <div id="status-aggregate" class="status">Nearby: open and quiet counts shown.</div>
+  </div>
+  <Button id="state-open" class="button">
+    <ButtonIcon>
+      <MessageCircle></MessageCircle>
+    </ButtonIcon>
+    <ButtonLabel>Open to talk</ButtonLabel>
+  </Button>
+  <Button id="state-quiet" class="button">
+    <ButtonIcon>
+      <Headphones></Headphones>
+    </ButtonIcon>
+    <ButtonLabel>Quiet — please don't approach</ButtonLabel>
+  </Button>
+  <Button id="state-observer" class="button">
+    <ButtonIcon>
+      <Eye></Eye>
+    </ButtonIcon>
+    <ButtonLabel>Observer — see counts only</ButtonLabel>
+  </Button>
+  <Button id="state-invisible" class="button button-last">
+    <ButtonIcon>
+      <EyeOff></EyeOff>
+    </ButtonIcon>
+    <ButtonLabel>Invisible — disconnect</ButtonLabel>
+  </Button>
+</Panel>

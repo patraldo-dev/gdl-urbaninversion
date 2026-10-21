@@ -1,0 +1,83 @@
+{
+  // Production is the top-level (default) environment; staging is a named env
+  // that overrides name, routes, D1 and vars. The two deploys are separate
+  // Workers, so their Durable Object namespaces and storage are fully
+  // isolated. Local dev: `wrangler dev --env staging` (localhost origins are
+  // in the staging allowlist).
+  "$schema": "node_modules/wrangler/config.schema.json",
+  "name": "urbaninversion-presence",
+  "main": "src/index.js",
+  // VERIFY: bump to the compatibility date of the wrangler version used at deploy time.
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "observability": { "enabled": true },
+
+  // One PresenceCell instance per geohash cell (idFromName); one
+  // MetricsRollup instance per parent geohash — the sole D1 writer, so
+  // sub-k cells never reach D1 even transiently.
+  "durable_objects": {
+    "bindings": [
+      { "name": "PRESENCE_CELL", "class_name": "PresenceCell" },
+      { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" }
+    ]
+  },
+  // VERIFY: SQLite-backed DO class declaration via wrangler migrations.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PresenceCell", "MetricsRollup"] }],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "urbaninversion-presence-production",
+      // Filled in by the runbook after `wrangler d1 create` (Phase 2g).
+      "database_id": "REPLACE_WITH_PRODUCTION_D1_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Routes only, no Custom Domain: the more specific /api/* and /ws patterns
+  // on this Worker win over the web Worker's /* route on the same hostnames.
+  "routes": [
+    { "pattern": "urbaninversion.com/api/*", "zone_name": "urbaninversion.com", "custom_domain": false },
+    { "pattern": "urbaninversion.com/ws", "zone_name": "urbaninversion.com", "custom_domain": false }
+  ],
+
+  "vars": {
+    // Strict allowlist for the WebSocket Origin check. Production has no localhost entries.
+    "ORIGIN_ALLOWLIST": ["https://urbaninversion.com"],
+    // Public Turnstile sitekey (safe to expose; the secret is a Worker secret).
+    "TURNSTILE_SITEKEY": "REPLACE_WITH_TURNSTILE_SITEKEY",
+    // Anti-spoof sanity radius in km; "0" = disabled. Off by default: carrier
+    // IPs routinely geolocate far from the true position, and a country check
+    // needs a boundary dataset (Phase 1 correction 5).
+    "GEO_SANITY_MAX_KM": "0"
+  },
+
+  "env": {
+    "staging": {
+      "name": "urbaninversion-presence-staging",
+      "workers_dev": false,
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "urbaninversion-presence-staging",
+          "database_id": "REPLACE_WITH_STAGING_D1_ID",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "routes": [
+        { "pattern": "staging.urbaninversion.com/api/*", "zone_name": "urbaninversion.com", "custom_domain": false },
+        { "pattern": "staging.urbaninversion.com/ws", "zone_name": "urbaninversion.com", "custom_domain": false }
+      ],
+      "vars": {
+        "ORIGIN_ALLOWLIST": ["https://staging.urbaninversion.com", "http://localhost:5173", "http://localhost:5174"],
+        "TURNSTILE_SITEKEY": "REPLACE_WITH_TURNSTILE_SITEKEY",
+        "GEO_SANITY_MAX_KM": "0"
+      }
+    }
+  }
+
+  // Secret, never in this file:
+  //   wrangler secret put TURNSTILE_SECRET                  # production
+  //   wrangler secret put TURNSTILE_SECRET --env staging
+  // For local dev, copy .dev.vars.example to .dev.vars.
+}

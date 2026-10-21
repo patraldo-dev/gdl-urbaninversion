@@ -1,0 +1,4 @@
+# Marketing pages may be crawled; the XR app is an experience, not content.
+# Staging additionally sends X-Robots-Tag via hooks.server.js + _headers.
+User-agent: *
+Disallow: /xr

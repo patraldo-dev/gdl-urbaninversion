@@ -1,0 +1,43 @@
+{
+  // SvelteKit Worker (adapter-cloudflare, Workers Static Assets).
+  // Production is the top-level environment; staging overrides name, routes
+  // and vars. The adapter is pointed at this file from vite.config.js.
+  // Built with `vite build` first; `wrangler deploy` then publishes the
+  // worker plus assets. /api/* and /ws never reach this Worker: the presence
+  // Worker holds more specific routes for those paths on the same hostnames.
+  "$schema": "node_modules/wrangler/config.schema.json",
+  "name": "urbaninversion-web",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  // VERIFY: bump to the compatibility date of the wrangler version used at deploy time.
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".svelte-kit/cloudflare",
+    // VERIFY: confirm /xr vs /xr/ both serve the XR index in the staging
+    // smoke test; site links are canonicalized to /xr/ regardless.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+
+  "routes": [
+    { "pattern": "urbaninversion.com/*", "zone_name": "urbaninversion.com", "custom_domain": false }
+  ],
+
+  // Read by hooks.server.js to set X-Robots-Tag: noindex on staging.
+  "vars": { "NOINDEX": "false" },
+
+  "env": {
+    "staging": {
+      "name": "urbaninversion-web-staging",
+      "workers_dev": false,
+      "routes": [
+        { "pattern": "staging.urbaninversion.com/*", "zone_name": "urbaninversion.com", "custom_domain": false }
+      ],
+      "vars": { "NOINDEX": "true" }
+    }
+  }
+}

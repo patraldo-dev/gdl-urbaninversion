@@ -1,0 +1,13 @@
+node_modules/
+.wrangler/
+.svelte-kit/
+dist/
+build/
+coverage/
+.dev.vars
+*.local
+.env
+.env.*
+.DS_Store
+# XR bundle copied into web static at build time (npm run build:web)
+apps/web/static/xr/

@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local `wrangler dev`. Never commit real values.
+# This is Cloudflare's documented Turnstile test secret (siteverify always
+# passes); pair it with the test sitekey on the client.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA

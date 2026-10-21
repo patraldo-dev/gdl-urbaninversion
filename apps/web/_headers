@@ -1,0 +1,6 @@
+# Served by the Workers static-assets layer (supported _headers file).
+# The XR bundle is an experience behind consent, not indexable content —
+# noindex applies in BOTH environments by design.
+/xr/*
+	X-Robots-Tag: noindex, nofollow
+	Cache-Control: public, max-age=3600

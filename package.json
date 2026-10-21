@@ -1,0 +1,22 @@
+{
+  "name": "urban-inversion",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "workers/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:web": "npm run build -w @urbaninversion/xr && npm run copy:xr -w @urbaninversion/web && npm run build -w @urbaninversion/web",
+    "check": "npm run typecheck --workspaces --if-present && npm run check -w @urbaninversion/web",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.6.0"
+  }
+}
