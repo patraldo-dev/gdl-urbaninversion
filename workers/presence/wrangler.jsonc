@@ -38,7 +38,7 @@
   // on this Worker win over the web Worker's /* route on the same hostnames.
   "routes": [
     { "pattern": "urbaninversion.com/api/*", "zone_name": "urbaninversion.com", "custom_domain": false },
-    { "pattern": "urbaninversion.com/ws", "zone_name": "urbaninversion.com", "custom_domain": false }
+    { "pattern": "urbaninversion.com/ws*", "zone_name": "urbaninversion.com", "custom_domain": false }
   ],
 
   "vars": {
@@ -56,6 +56,14 @@
     "staging": {
       "name": "urbaninversion-presence-staging",
       "workers_dev": false,
+      // Wrangler envs do NOT inherit bindings: the DO binding must be
+      // repeated here or env.PRESENCE_CELL is undefined at runtime.
+      "durable_objects": {
+        "bindings": [
+          { "name": "PRESENCE_CELL", "class_name": "PresenceCell" },
+          { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" }
+        ]
+      },
       "d1_databases": [
         {
           "binding": "DB",
@@ -66,7 +74,7 @@
       ],
       "routes": [
         { "pattern": "staging.urbaninversion.com/api/*", "zone_name": "urbaninversion.com", "custom_domain": false },
-        { "pattern": "staging.urbaninversion.com/ws", "zone_name": "urbaninversion.com", "custom_domain": false }
+        { "pattern": "staging.urbaninversion.com/ws*", "zone_name": "urbaninversion.com", "custom_domain": false }
       ],
       "vars": {
         "ORIGIN_ALLOWLIST": ["https://staging.urbaninversion.com", "http://localhost:5173", "http://localhost:5174"],
