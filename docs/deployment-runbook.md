@@ -292,6 +292,14 @@ Settings → Build → Connect to Git → repo `patraldo-dev/urbaninversion.com`
 | urbaninversion-gdl | `apps/gdl` | *(empty)* | `npx wrangler deploy` | main |
 | urbaninversion-gdl-staging | `apps/gdl` | *(empty)* | `npx wrangler deploy --env staging` | main |
 
+**Connect only the four that exist today** (gdl prod/staging, web-staging,
+presence-staging). `urbaninversion-web` and `urbaninversion-presence` do not
+exist yet as Workers — production deploy is gated behind §9 (apex cutover:
+prod D1 migration + TURNSTILE_SECRET first, then deploy, then detach the
+placeholder's apex custom domain). A worker can't get a build config before
+its first deploy; connect those two rows when §9 runs. Also set
+**Install command: `pnpm install --frozen-lockfile`** in each build config.
+
 If any other worker still shows failing builds from this repo, disconnect
 its Git integration the same way (the gdl-urbaninversion one is already gone).
 The `CLOUDFLARE_API_TOKEN` repo secret is now unused (CI doesn't deploy);
