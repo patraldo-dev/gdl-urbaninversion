@@ -1,30 +1,31 @@
 {
-	"name": "@urbaninversion/web",
-	"private": true,
-	"version": "0.1.0",
-	"type": "module",
-	"scripts": {
-		"dev": "vite dev",
-		"copy:xr": "node scripts/copy-xr.mjs",
-		"build": "vite build",
-		"deploy:staging": "wrangler deploy --env staging",
-		"deploy:production": "wrangler deploy",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
-	},
-	"devDependencies": {
-		"@sveltejs/adapter-cloudflare": "^8.0.1",
-		"@sveltejs/kit": "^3.0.0",
-		"@sveltejs/vite-plugin-svelte": "^7.2.0",
-		"svelte": "^5.57.1",
-		"svelte-check": "^4.6.0",
-		"typescript": "^6.0.3",
-		"vite": "^8.3.0"
-	},
-	"imports": {
-		"#lib": "./src/lib/index.js",
-		"#lib/*": "./src/lib/*"
-	}
+  "name": "@urbaninversion/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "copy:xr": "node scripts/copy-xr.mjs",
+    "build": "vite build",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-cloudflare": "^8.0.1",
+    "@sveltejs/kit": "^3.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.6.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.0",
+    "wrangler": "^4.35.0"
+  },
+  "imports": {
+    "#lib": "./src/lib/index.js",
+    "#lib/*": "./src/lib/*"
+  }
 }
