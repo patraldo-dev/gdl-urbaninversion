@@ -167,22 +167,39 @@ BASE=https://staging.urbaninversion.com
 
 ## 9. Production — only after §8 passes end-to-end
 
-1. **Detach the current placeholder** on `urbaninversion.com`. Find it:
-   `npx wrangler pages project list` (if it's a Pages project → dash →
-   Pages → the project → Custom domains → remove `urbaninversion.com`),
-   else dash → Workers Routes / Custom Domains → delete whatever claims
-   `urbaninversion.com/*`. The zone's proxied root DNS record stays.
-2. Real Turnstile widget for `urbaninversion.com` → put the **sitekey** in
-   top-level `vars` of `workers/presence/wrangler.jsonc`, then:
+Account facts (verified 2026-10-21): account `chef tech`
+`477082f5c9678c608889bd8f03f7b807`; zone `urbaninversion.com`
+`e82864c37e16a5908164e47d934bd326`. The apex `urbaninversion.com` is a
+**Custom Domain (id `ec312ae71456e74b82810a9e3c2ed35322deb736`) attached to
+the old placeholder Worker `03-com-urbaninversion`** (code:
+`patraldo-dev/03-com-urbaninversion`). A Custom Domain takes precedence
+over routes on the same hostname, so the cutover order matters:
+
+1. Deploy FIRST (routes claim the hostname but don't win until the Custom
+   Domain is gone):
    ```sh
    cd workers/presence
    npx wrangler deploy                       # top-level = production
    npx wrangler secret put TURNSTILE_SECRET  # production secret
    npx wrangler d1 migrations apply urbaninversion-presence-production --remote
+   npm run build:web && cd ../web && npx wrangler deploy
    ```
-3. Web: `npm run build:web && cd apps/web && npx wrangler deploy`.
-4. Routes created by the deploys: `urbaninversion.com/api/*` + `/ws`
-   (presence), `urbaninversion.com/*` (web).
+2. Detach the apex Custom Domain from `03-com-urbaninversion`: dash →
+   Workers & Pages → 03-com-urbaninversion → Settings → Domains & Routes →
+   remove `urbaninversion.com` — or API:
+   `DELETE /accounts/<acc>/workers/domains/ec312ae71456e74b82810a9e3c2ed35322deb736`.
+   Traffic then flows to the routes from step 1.
+3. Delete the orphaned `03-com-urbaninversion` Worker (its code lives in
+   its repo). Real Turnstile sitekey goes into top-level `vars` before the
+   public launch (test pair is fine for the smoke pass).
+
+Zone cleanup already done (2026-10-21): removed the redundant
+`GDL.urbaninversion.com/*` route (the `gdl` subdomain serves via its Custom
+Domain on the `gdl-urbaninversion` Worker — the prior GDL AR-tour project,
+code preserved on the repo's `legacy-scaffold` branch; last deployed
+2026-05-11, untouched by the monorepo). Workers belonging to other zones
+(ambientx.dev, patraldo.com, patrouch.ca, mexicanbold.com, …) are out of
+scope for this runbook and were left untouched.
 
 Production smoke: repeat §8 items 1, 3–6 with
 `BASE=https://urbaninversion.com` — **except** item 2 inverted: site HTML
