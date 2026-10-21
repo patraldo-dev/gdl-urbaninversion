@@ -249,3 +249,51 @@ the DNS record) — until then the workflow will fail at the deploy step by
 design. Alternative considered: Cloudflare Workers Builds (dash-side repo
 connection) — works, but the monorepo's cross-package pipeline
 (xr build → copy → web build) is cleaner in the Actions workflows.
+
+## §12 — 2026-10-21 restructure: GDL joins the monorepo, Workers Builds deploys
+
+The repo now lives at `~/sveltecloudflare/urbaninversion` (moved out of the
+.zcode workspace). The GDL astronomy AR tour (formerly the standalone
+`gdl-urbaninversion` repo/worker, full history on the `legacy-scaffold`
+branch) is now `apps/gdl` — one more app in the workspace. §11's GitHub
+Actions deploy workflows were REMOVED; deploys are Cloudflare Workers Builds
+(the ambientx-webxr pattern — decision 2026-10-21). ci.yml (check + 69 tests
++ build:web) still runs on every push.
+
+### Workers (all verified live 2026-10-21)
+
+| Worker | App dir | Env | Hostname |
+| --- | --- | --- | --- |
+| `urbaninversion-gdl` | `apps/gdl` | top-level | `gdl.urbaninversion.com` (custom domain, migrated atomically from old worker via PUT workers/domains) |
+| `urbaninversion-gdl-staging` | `apps/gdl` | `staging` | `staging-gdl.urbaninversion.com` + workers.dev |
+| `urbaninversion-web` / `-staging` | `apps/web` | top / `staging` | apex + staging.urbaninversion.com (§9 cutover pending) |
+| `urbaninversion-presence` / `-staging` | `workers/presence` | top / `staging` | `/api/*`, `/ws*` routes |
+
+- GDL D1: prod `gdl-urbaninversion` (06b8a678…), staging
+  `gdl-urbaninversion-staging` (28ebc1c2…, seeded from prod export 2026-10-21).
+  R2 `gdl-astronomy-assets` and the AI binding are shared prod/staging
+  (ambientx-oz-staging pattern).
+- Old worker `gdl-urbaninversion` DELETED 2026-10-21 (its stale Workers Build
+  integration — the source of the failing-build emails — died with it).
+- `build.command` inside `apps/web` and `apps/gdl` wrangler.jsonc runs the
+  real build at deploy time (greenroom lesson: node-direct, no npm/npx).
+  npm hoists unlike pnpm: web's vite 8 is invoked via `../../node_modules`
+  with cwd staying `apps/web` (SvelteKit resolves paths against cwd).
+
+### One-time dashboard setup (per worker, Workers & Pages → worker →
+Settings → Build → Connect to Git → repo `patraldo-dev/urbaninversion.com`)
+
+| Worker | Root directory | Build command | Deploy command | Prod branch |
+| --- | --- | --- | --- | --- |
+| urbaninversion-web | `apps/web` | *(empty — build runs in deploy)* | `npx wrangler deploy` | main |
+| urbaninversion-web-staging | `apps/web` | *(empty)* | `npx wrangler deploy --env staging` | main |
+| urbaninversion-presence | `workers/presence` | *(empty)* | `npx wrangler deploy` | main |
+| urbaninversion-presence-staging | `workers/presence` | *(empty)* | `npx wrangler deploy --env staging` | main |
+| urbaninversion-gdl | `apps/gdl` | *(empty)* | `npx wrangler deploy` | main |
+| urbaninversion-gdl-staging | `apps/gdl` | *(empty)* | `npx wrangler deploy --env staging` | main |
+
+If any other worker still shows failing builds from this repo, disconnect
+its Git integration the same way (the gdl-urbaninversion one is already gone).
+The `CLOUDFLARE_API_TOKEN` repo secret is now unused (CI doesn't deploy);
+revoke at leisure. Optional: add `patraldo-dev/urbaninversion.com` to
+deploy-notifier's ALLOWED_REPOS (gdl-urbaninversion entry is stale post-rename).
