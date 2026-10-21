@@ -201,3 +201,34 @@ must NOT carry `x-robots-tag` (`/xr/*` keeps its noindex by design).
 - Deploy-time config drift: `npm run check` + `npm test` before every
   deploy; the DO test suite catches registration/signature/handoff breaks
   that only appear at runtime.
+
+## 11. CI/CD — GitHub → Cloudflare
+
+Repo: `github.com/patraldo-dev/gdl-urbaninversion` (main = this monorepo;
+the previous GDL AR-tour project is preserved on the `legacy-scaffold`
+branch). Three workflows in `.github/workflows/`:
+
+- **CI** — every push to `main` and every PR: typecheck, 69 tests, full
+  build. No Cloudflare credentials needed.
+- **Deploy — staging** — push to a `staging` branch or manual dispatch:
+  check → test → build → `wrangler deploy --env staging` (presence), D1
+  migrations, `wrangler deploy --env staging` (web).
+- **Deploy — production** — manual dispatch only, tied to the GitHub
+  `production` environment (add required reviewers in repo Settings →
+  Environments for an approval gate).
+
+One-time setup in GitHub (repo Settings → Secrets and variables → Actions):
+
+1. `CLOUDFLARE_API_TOKEN` — create in the Cloudflare dash (My Profile →
+   API Tokens) with scopes: **Account → Workers Scripts: Edit**,
+   **Account → D1: Edit**, **Zone (urbaninversion.com) → Workers Routes:
+   Edit**, **Account → Account Settings: Read**.
+2. `CLOUDFLARE_ACCOUNT_ID` — dash overview, right sidebar.
+
+`TURNSTILE_SECRET` deliberately never enters CI — set it once per
+environment with `wrangler secret put` (§4/§9). Note the first CI staging
+deploy still requires runbook §1–§3 done (real D1 ids in `wrangler.jsonc`,
+the DNS record) — until then the workflow will fail at the deploy step by
+design. Alternative considered: Cloudflare Workers Builds (dash-side repo
+connection) — works, but the monorepo's cross-package pipeline
+(xr build → copy → web build) is cleaner in the Actions workflows.
