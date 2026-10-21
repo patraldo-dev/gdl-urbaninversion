@@ -2,16 +2,17 @@
   "name": "urban-inversion",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@12.14.0",
   "workspaces": [
     "packages/*",
     "workers/*",
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "build:web": "npm run build -w @urbaninversion/xr && npm run copy:xr -w @urbaninversion/web && npm run build -w @urbaninversion/web",
-    "check": "npm run typecheck --workspaces --if-present && npm run check -w @urbaninversion/web",
-    "test": "npm run test --workspaces --if-present"
+    "build": "pnpm -r run build",
+    "build:web": "pnpm --filter @urbaninversion/xr run build && pnpm --filter @urbaninversion/web run copy:xr && pnpm --filter @urbaninversion/web run build",
+    "check": "pnpm -r run typecheck && pnpm --filter @urbaninversion/web run check",
+    "test": "pnpm -r run test"
   },
   "engines": {
     "node": ">=20.0.0"

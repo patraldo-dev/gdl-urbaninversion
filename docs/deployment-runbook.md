@@ -297,3 +297,22 @@ its Git integration the same way (the gdl-urbaninversion one is already gone).
 The `CLOUDFLARE_API_TOKEN` repo secret is now unused (CI doesn't deploy);
 revoke at leisure. Optional: add `patraldo-dev/urbaninversion.com` to
 deploy-notifier's ALLOWED_REPOS (gdl-urbaninversion entry is stale post-rename).
+
+### §12 amendment — 2026-10-21 later: pnpm, cpu limits, watch paths
+
+- **pnpm is the package manager** (user decision; matches ambientx-webxr).
+  Root `package.json` pins `packageManager: pnpm@12.14.0`; `pnpm-workspace.yaml`
+  holds globs + `overrides` (sharp 0.35.4, three → super-three alias, both
+  migrated from apps/xr's npm-era `overrides`) + pnpm's own `allowBuilds`.
+  Internal deps use `workspace:*`. `package-lock.json` deleted. In the
+  dashboard build configs set **Install command: `pnpm install --frozen-lockfile`**
+  (Workers Builds may not auto-detect pnpm from the lockfile).
+- **CPU limits**: every wrangler.jsonc now sets `limits.cpu_ms: 30000`
+  explicitly (the paid-plan default, made explicit so it can't silently
+  drift higher). Current workloads are ms-scale — tightening to ~10_000 is
+  safe if a harder cap is wanted after the billing review.
+- **Watch paths** (`build.watch_paths`, per worker): gdl → `apps/gdl/**`;
+  web → `apps/web/** + apps/xr/**`; presence → `workers/presence/** +
+  packages/shared/**`; all + `pnpm-lock.yaml`. A worker's build only runs
+  when its paths change. All staging workers + gdl prod redeployed and
+  verified with these configs 2026-10-21.

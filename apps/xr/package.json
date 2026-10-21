@@ -18,7 +18,7 @@
     "@pmndrs/uikit": "^1.0.74",
     "@pmndrs/uikit-horizon": "^1.0.74",
     "@pmndrs/uikit-lucide": "^1.0.74",
-    "@urbaninversion/shared": "*",
+    "@urbaninversion/shared": "workspace:*",
     "three": "npm:super-three@0.181.0"
   },
   "devDependencies": {
@@ -26,10 +26,6 @@
     "@iwsdk/cli": "1.0.1",
     "@iwsdk/vite-plugin-dev": "1.0.1",
     "vite": "^7.1.4"
-  },
-  "overrides": {
-    "sharp": "0.35.4",
-    "three": "npm:super-three@0.181.0"
   },
   "engines": {
     "node": ">=20.19.0 <21.0.0-0 || >=22.12.0 <23.0.0-0 || >=24.0.0"

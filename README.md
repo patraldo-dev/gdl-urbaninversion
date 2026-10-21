@@ -28,14 +28,16 @@ TypeScript while the rest of the monorepo remains JSDoc-JS.
 ## Commands
 
 ```sh
-npm install              # at repo root (npm workspaces)
-npm run build            # workspaces run in glob order: shared first, then workers, then apps
-npm test                 # Vitest: validation, quantization, k-anonymity, DO + simulation harness
+pnpm install              # at repo root (pnpm workspace; pnpm-workspace.yaml)
+pnpm build                # all workspaces, in dependency (topological) order
+pnpm test                 # Vitest: validation, quantization, k-anonymity, DO + simulation harness
+pnpm build:web            # xr build → copy into web static → web build
 ```
 
-`npm run build` relies on the workspaces glob order (`packages/*` before
-`workers/*` and `apps/*`) so `@urbaninversion/shared` is always built before
-its consumers.
+pnpm runs workspace scripts in topological order, so `@urbaninversion/shared`
+is always built before its consumers. Internal deps use the `workspace:*`
+protocol. The npm-era `--legacy-peer-deps` workaround is gone (npm's
+arborist crashed on this tree; pnpm resolves it cleanly).
 
 ## Environments
 

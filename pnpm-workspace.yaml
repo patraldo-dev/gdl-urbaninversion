@@ -1,0 +1,14 @@
+packages:
+  - "packages/*"
+  - "workers/*"
+  - "apps/*"
+
+overrides:
+  sharp: 0.35.4
+  three: npm:super-three@0.181.0
+
+allowBuilds:
+  esbuild: true
+  onnxruntime-node: true
+  protobufjs: true
+  workerd: true

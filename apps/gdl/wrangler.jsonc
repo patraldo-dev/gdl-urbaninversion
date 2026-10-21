@@ -11,11 +11,15 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": ".cloudflare/worker.js",
   // Workers Builds hardening (the ambientx greenroom lesson): build runs
-  // inside the deploy via node directly — no npm/npx PATH or registry
-  // round-trip, bundle always fresh-built from the pushed source.
+  // inside the deploy via node directly — no package manager invocation,
+  // no PATH or registry round-trip, bundle always fresh from pushed source.
   "build": {
-    "command": "node node_modules/vite/bin/vite.js build"
+    "command": "node node_modules/vite/bin/vite.js build",
+    // Only build this worker when the app or the lockfile changes.
+    "watch_paths": ["apps/gdl/**", "pnpm-lock.yaml"]
   },
+  // Cost guard: paid-plan default (30 s CPU/invocation) made explicit.
+  "limits": { "cpu_ms": 30000 },
   "assets": {
     "directory": ".cloudflare/public",
     "binding": "ASSETS"

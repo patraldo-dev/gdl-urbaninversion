@@ -9,15 +9,19 @@
   "name": "urbaninversion-web",
   "main": ".svelte-kit/cloudflare/_worker.js",
   // Workers Builds hardening (the ambientx greenroom lesson): the whole
-  // build chain runs inside the deploy via node directly — no npm/npx PATH
-  // or registry round-trip, and the XR bundle is always fresh-built from the
-  // pushed source instead of a possibly stale committed copy. npm (unlike
-  // pnpm) hoists shared deps to the repo root, so web's vite 8 is invoked
-  // via ../../node_modules while cwd stays apps/web (SvelteKit resolves
-  // config paths against cwd); xr's vite 7 is nested in apps/xr.
+  // build chain runs inside the deploy via node directly — no package
+  // manager invocation, so no PATH or registry round-trip, and the XR bundle
+  // is always fresh-built from pushed source. pnpm nests every workspace's
+  // deps, so each app resolves its own vite from its own node_modules.
   "build": {
-    "command": "cd ../xr && node node_modules/vite/bin/vite.js build && cd ../web && node scripts/copy-xr.mjs && node ../../node_modules/vite/bin/vite.js build"
+    "command": "cd ../xr && node node_modules/vite/bin/vite.js build && cd ../web && node scripts/copy-xr.mjs && node node_modules/vite/bin/vite.js build",
+    // Only build this worker when the site, the XR client it bundles, or
+    // the lockfile change (Workers Builds watch paths).
+    "watch_paths": ["apps/web/**", "apps/xr/**", "pnpm-lock.yaml"]
   },
+  // Cost guard: paid-plan default (30 s CPU/invocation) made explicit.
+  // SSR is ms-scale; tighten to ~10_000 safely if wanted.
+  "limits": { "cpu_ms": 30000 },
   // VERIFY: bump to the compatibility date of the wrangler version used at deploy time.
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
