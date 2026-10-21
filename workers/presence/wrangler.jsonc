@@ -29,7 +29,7 @@
       "binding": "DB",
       "database_name": "urbaninversion-presence-production",
       // Filled in by the runbook after `wrangler d1 create` (Phase 2g).
-      "database_id": "REPLACE_WITH_PRODUCTION_D1_ID",
+      "database_id": "4e942447-5cbd-45a8-9821-ad231a33589a",
       "migrations_dir": "migrations"
     }
   ],
@@ -45,7 +45,7 @@
     // Strict allowlist for the WebSocket Origin check. Production has no localhost entries.
     "ORIGIN_ALLOWLIST": ["https://urbaninversion.com"],
     // Public Turnstile sitekey (safe to expose; the secret is a Worker secret).
-    "TURNSTILE_SITEKEY": "REPLACE_WITH_TURNSTILE_SITEKEY",
+    "TURNSTILE_SITEKEY": "1x00000000000000000000AA",
     // Anti-spoof sanity radius in km; "0" = disabled. Off by default: carrier
     // IPs routinely geolocate far from the true position, and a country check
     // needs a boundary dataset (Phase 1 correction 5).
@@ -60,7 +60,7 @@
         {
           "binding": "DB",
           "database_name": "urbaninversion-presence-staging",
-          "database_id": "REPLACE_WITH_STAGING_D1_ID",
+          "database_id": "efc2e107-dd0d-4344-a658-a14d3efee11c",
           "migrations_dir": "migrations"
         }
       ],
@@ -70,7 +70,7 @@
       ],
       "vars": {
         "ORIGIN_ALLOWLIST": ["https://staging.urbaninversion.com", "http://localhost:5173", "http://localhost:5174"],
-        "TURNSTILE_SITEKEY": "REPLACE_WITH_TURNSTILE_SITEKEY",
+        "TURNSTILE_SITEKEY": "1x00000000000000000000AA",
         "GEO_SANITY_MAX_KM": "0"
       }
     }
