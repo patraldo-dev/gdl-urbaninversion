@@ -47,8 +47,12 @@
     <ButtonIcon><Eye></Eye></ButtonIcon>
     <ButtonLabel class="button-label">Observateur - comptages seulement</ButtonLabel>
   </Button>
-  <Button id="state-invisible" class="button button-last">
+  <Button id="state-invisible" class="button">
     <ButtonIcon><EyeOff></EyeOff></ButtonIcon>
     <ButtonLabel class="button-label">Invisible - déconnexion</ButtonLabel>
+  </Button>
+  <Button id="exit-xr" class="button button-last">
+    <ButtonIcon><LogIn></LogIn></ButtonIcon>
+    <ButtonLabel class="button-label">Quitter XR</ButtonLabel>
   </Button>
 </Panel>

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { createSystem, VisibilityState } from '@iwsdk/core';
+import { hapticPulse } from './ui/feedback.js';
 
 // Site menu targets — the 2D panel doubles as the "main menu" back into
 // the site (the XR bundle has no site chrome of its own).
@@ -16,16 +17,26 @@ const MENU = /** @type {const} */ ([
 
 export class PanelSystem extends createSystem({}) {
     init() {
+        // UIKitML assets load asynchronously, so element lookups can fail
+        // at init time; wiring is retried in update() until the panel's
+        // elements exist (same pattern as src/ui/presence-ui.js).
+        this.wired = false;
+    }
+
+    update() {
+        if (this.wired) return;
         const panel = this.world.getSceneObject('welcome-panel');
         const xrButton = panel?.getElementById('xr-button');
         const exitButton = panel?.getElementById('exit-button');
         if (xrButton == null || exitButton == null) {
             return;
         }
+        this.wired = true;
         for (const [id, href] of MENU) {
             const button = panel?.getElementById(id);
             if (button == null) continue;
             const navigate = () => {
+                hapticPulse(this.world);
                 // Leaving the page ends the session cleanly (the socket
                 // closes; the server keeps nothing).
                 window.location.assign(href);
@@ -40,8 +51,14 @@ export class PanelSystem extends createSystem({}) {
             exitButton.setProperties({ display: 'none' });
             return;
         }
-        const launchXR = () => this.world.launchXR();
-        const exitXR = () => this.world.exitXR();
+        const launchXR = () => {
+            hapticPulse(this.world);
+            this.world.launchXR();
+        };
+        const exitXR = () => {
+            hapticPulse(this.world);
+            this.world.exitXR();
+        };
         xrButton.addEventListener('click', launchXR);
         exitButton.addEventListener('click', exitXR);
         this.cleanupFuncs.push(() => xrButton.removeEventListener('click', launchXR), () => exitButton.removeEventListener('click', exitXR), this.world.visibilityState.subscribe((visibilityState) => {

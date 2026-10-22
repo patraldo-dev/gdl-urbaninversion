@@ -3,4 +3,23 @@
 # noindex applies in BOTH environments by design.
 /xr/*
 	X-Robots-Tag: noindex, nofollow
-	Cache-Control: public, max-age=3600
+
+# Cache: Workers Assets concatenates headers from every matching rule, so
+# each path matches exactly ONE Cache-Control rule. The shell HTML and the
+# unhashed ui/ fonts/ scenes/ payloads revalidate on every request (a
+# cached /xr/ page references yesterday's hashed bundles — that is how
+# phones got stuck on the pre-i18n scaffold), while content-addressed
+# /xr/assets/* cache forever. Stock dirs (audio/, gltf/, textures/) keep
+# default asset caching.
+/xr
+	Cache-Control: public, max-age=0, must-revalidate
+/xr/
+	Cache-Control: public, max-age=0, must-revalidate
+/xr/ui/*
+	Cache-Control: public, max-age=0, must-revalidate
+/xr/fonts/*
+	Cache-Control: public, max-age=0, must-revalidate
+/xr/scenes/*
+	Cache-Control: public, max-age=0, must-revalidate
+/xr/assets/*
+	Cache-Control: public, max-age=31536000, immutable
