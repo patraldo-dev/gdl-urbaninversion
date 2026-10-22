@@ -325,8 +325,11 @@ deploy-notifier's ALLOWED_REPOS (gdl-urbaninversion entry is stale post-rename).
   `build.watch_paths` in wrangler.jsonc — verified in build log warnings;
   removed from configs). Set in worker → Settings → Build → Build watch
   paths, relative to repo root:
-  gdl prod+staging → `apps/gdl/**, pnpm-lock.yaml`;
-  web-staging → `apps/web/**, apps/xr/**, pnpm-lock.yaml`;
+  gdl prod+staging → `apps/gdl/**, pnpm-lock.yaml` (gdl depends on no
+  internal packages — only leaflet/fontsource);
+  web-staging → `apps/web/**, apps/xr/**, packages/shared/**, pnpm-lock.yaml`
+  (shared has no direct dep from web but flows in via the embedded xr
+  bundle — xr imports @urbaninversion/shared in src/presence, device, ecs);
   presence-staging → `workers/presence/**, packages/shared/**, pnpm-lock.yaml`.
   A worker's build then only runs when its paths change. First fully
   push-deployed build (gdl prod via Workers Builds) verified green
