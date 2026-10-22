@@ -1,27 +1,17 @@
+<script>
+	import { t } from '#lib/i18n/index.js';
+</script>
+
 <svelte:head>
-	<title>Pair a phone — Urban Inversion</title>
+	<title>{$t('meta.title_pair')}</title>
 </svelte:head>
 
-<h1>Pair a phone</h1>
+<h1>{$t('pair.title')}</h1>
 
-<p class="lede">
-	This page is a stub. Phone pairing is intentionally not implemented in v1.
-</p>
+<p class="lede">{$t('pair.lede')}</p>
 
-<h2>Why it isn't needed today</h2>
-<p>
-	Ray-Ban Display glasses pair with a phone at the operating-system level,
-	and the glasses' web runtime exposes that phone-sourced location to web
-	apps directly. The XR client reads it through its location provider, so
-	there is nothing to pair in-app.
-</p>
+<h2>{$t('pair.why_h')}</h2>
+<p>{$t('pair.why_p')}</p>
 
-<h2>What would live here</h2>
-<p>
-	If on-device measurements ever show the runtime's location is unusable,
-	this page becomes the companion flow: a short-lived pairing code shown in
-	XR, entered here on the phone, after which the phone streams GPS and
-	compass into your session over the same presence infrastructure. The
-	client-side interface for that provider already exists in the code as a
-	documented stub.
-</p>
+<h2>{$t('pair.what_h')}</h2>
+<p>{$t('pair.what_p')}</p>

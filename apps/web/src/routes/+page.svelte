@@ -1,44 +1,36 @@
+<script>
+	import { t } from '#lib/i18n/index.js';
+</script>
+
 <svelte:head>
-	<title>Urban Inversion — see who's open to a conversation</title>
+	<title>{$t('meta.title_home')}</title>
 </svelte:head>
 
-<h1>Take off the headphones cocoon.<br />Keep the headphones on.</h1>
+<h1>{$t('home.title_a')}<br />{$t('home.title_b')}</h1>
 
 <p class="lede">
-	Urban Inversion is a presence layer for glasses wearers. As you walk, your
-	glasses quietly show who nearby is <strong>open to a conversation</strong> — and who
-	wants to be <strong>left alone</strong> — so approaching someone is welcome, and giving
-	someone space is easy.
+	{$t('home.lede_a')} <strong>{$t('home.lede_open')}</strong> {$t('home.lede_and')}
+	<strong>{$t('home.lede_alone')}</strong> {$t('home.lede_b')}
 </p>
 
 <p>
-	<span class="pill open">Open</span>
-	<span class="pill quiet">Quiet</span>
-	<span class="pill observer">Observer</span>
-	You choose your state moment to moment. Go invisible and the app
-	disconnects completely — the server holds nothing about you at all.
+	<span class="pill open">{$t('home.pill_open')}</span>
+	<span class="pill quiet">{$t('home.pill_quiet')}</span>
+	<span class="pill observer">{$t('home.pill_observer')}</span>
+	{$t('home.pills_note')}
 </p>
 
-<h2>Why "inversion"?</h2>
+<h2>{$t('home.why_h')}</h2>
+<p>{$t('home.why_p')}</p>
+
+<h2>{$t('home.privacy_h')}</h2>
 <p>
-	Cities spent a decade designing people into bubbles — screens, buds,
-	blank stares. This inverts the signal: the same wearable technology that
-	sealed us off becomes a small, consent-based beacon for the analog thing
-	it replaced: a chat with whoever happens to be there.
+	{$t('home.privacy_p_a')}
+	<a href="/privacy">{$t('home.privacy_link')}</a>
 </p>
 
-<h2>Built privacy-first</h2>
+<h2>{$t('home.start_h')}</h2>
 <p>
-	No accounts, no names, no faces, no camera use. Your position exists only
-	in server memory for a few seconds and is shared with nobody — others see
-	only a rough direction and distance category, and only while you are
-	visible yourself. <a href="/privacy">Exactly how it works, in detail.</a>
-</p>
-
-<h2>Getting started</h2>
-<p>
-	The experience runs in the browser of display glasses (currently the
-	Ray-Ban Display web-app runtime) at <code>/xr</code> — added once via the
-	Meta AI app in Developer Mode, then it's just a URL. Start on the
-	<a href="/enter">Enter page</a> for the one-time consent step.
+	{$t('home.start_p_a')} <code>/xr</code> {$t('home.start_p_b')}
+	<a href="/enter">{$t('home.start_link')}</a> {$t('home.start_p_c')}
 </p>

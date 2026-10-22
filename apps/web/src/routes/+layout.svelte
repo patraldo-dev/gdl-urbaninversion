@@ -1,26 +1,45 @@
 <script>
 	import favicon from '#lib/assets/favicon.svg';
+	import { page } from '$app/state';
+	import { t, locale, locales } from '#lib/i18n/index.js';
 
 	/** @type {{children: import('svelte').Snippet}} */
 	let { children } = $props();
+
+	$effect(() => {
+		document.documentElement.lang = $locale;
+	});
+
+	/** @param {string} lang */
+	function switchUrl(lang) {
+		return `/api/locale?lang=${lang}&redirect=${encodeURIComponent(page.url.pathname)}`;
+	}
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 	<title>Urban Inversion</title>
-	<meta
-		name="description"
-		content="A presence layer for glasses wearers: see who nearby is open to a conversation, and who wants quiet. Privacy-first, ephemeral, opt-in."
-	/>
+	<meta name="description" content={$t('meta.description')} />
 </svelte:head>
 
 <div class="shell">
 	<header>
 		<a class="brand" href="/">Urban&nbsp;Inversion</a>
 		<nav>
-			<a href="/how-it-works">How it works</a>
-			<a href="/privacy">Privacy &amp; safety</a>
-			<a class="cta" href="/enter">Enter</a>
+			<a href="/how-it-works">{$t('nav.how')}</a>
+			<a href="/privacy">{$t('nav.privacy')}</a>
+			<span class="langs" aria-label="Language">
+				{#each locales as lang (lang)}
+					<a
+						class="lang"
+						href={switchUrl(lang)}
+						aria-current={$locale === lang ? 'true' : undefined}
+					>
+						{lang.toUpperCase()}
+					</a>
+				{/each}
+			</span>
+			<a class="cta" href="/enter">{$t('nav.enter')}</a>
 		</nav>
 	</header>
 	<main>
@@ -28,8 +47,8 @@
 	</main>
 	<footer>
 		<p>
-			No accounts. No tracking. Positions live only briefly in server memory and never leave it.
-			<a href="/privacy">Read the details</a>.
+			{$t('footer.line')}
+			<a href="/privacy">{$t('footer.read')}</a>.
 		</p>
 	</footer>
 </div>
@@ -93,6 +112,22 @@
 		padding: 0.35rem 0.9rem;
 		border-radius: 999px;
 		font-weight: 600;
+	}
+	.langs {
+		display: inline-flex;
+		gap: 0.3rem;
+		font-size: 0.75rem;
+		letter-spacing: 0.03em;
+	}
+	.langs a.lang {
+		font-size: 0.75rem;
+		color: var(--muted);
+		text-decoration: none;
+		padding: 0 0.15rem;
+	}
+	.langs a.lang[aria-current='true'] {
+		color: var(--accent);
+		font-weight: 700;
 	}
 	footer {
 		margin-top: 3rem;

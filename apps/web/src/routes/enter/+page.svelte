@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { t } from '#lib/i18n/index.js';
 
 	// Turnstile runs HERE, on the ordinary DOM page, before the XR session
 	// starts (it cannot render inside an immersive session); the token rides
@@ -30,7 +31,7 @@
 		widgetId = api.turnstile?.render('#turnstile', {
 			sitekey,
 			callback: (/** @type {string} */ t) => (token = t),
-			'error-callback': () => (status = 'The challenge failed to load — please retry.'),
+			'error-callback': () => (status = $t('enter.error')),
 			'expired-callback': () => (token = '')
 		});
 	});
@@ -58,22 +59,18 @@
 </script>
 
 <svelte:head>
-	<title>Enter — Urban Inversion</title>
+	<title>{$t('meta.title_enter')}</title>
 </svelte:head>
 
-<h1>Before you enter</h1>
+<h1>{$t('enter.title')}</h1>
 
-<p class="lede">
-	One explicit opt-in, one quick human check — then the glasses take over.
-</p>
+<p class="lede">{$t('enter.lede')}</p>
 
 <label class="consent">
 	<input type="checkbox" bind:checked={consented} />
 	<span>
-		I understand that while I am Open or Quiet, people nearby can see an
-		anonymous, coarse indication of my direction and state — never my
-		name, face, or exact location — and that I can go invisible at any
-		time. See <a href="/privacy">Privacy &amp; safety</a>.
+		{$t('enter.consent_a')}
+		<a href="/privacy">{$t('nav.privacy')}</a>{$t('enter.consent_b')}
 	</span>
 </label>
 
@@ -81,7 +78,9 @@
 
 <p class="status" role="status">{status}</p>
 
-<button class="enter" disabled={!consented || !token} onclick={enter}>Enter the experience</button>
+<button class="enter" disabled={!consented || !token} onclick={enter}>
+	{$t('enter.button')}
+</button>
 
 <style>
 	.consent {
