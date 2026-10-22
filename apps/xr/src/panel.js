@@ -5,6 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { createSystem, VisibilityState } from '@iwsdk/core';
+
+// Site menu targets — the 2D panel doubles as the "main menu" back into
+// the site (the XR bundle has no site chrome of its own).
+const MENU = /** @type {const} */ ([
+    ['menu-home', '/'],
+    ['menu-how', '/how-it-works'],
+    ['menu-privacy', '/privacy'],
+]);
+
 export class PanelSystem extends createSystem({}) {
     init() {
         const panel = this.world.getSceneObject('welcome-panel');
@@ -13,7 +22,20 @@ export class PanelSystem extends createSystem({}) {
         if (xrButton == null || exitButton == null) {
             return;
         }
+        for (const [id, href] of MENU) {
+            const button = panel?.getElementById(id);
+            if (button == null) continue;
+            const navigate = () => {
+                // Leaving the page ends the session cleanly (the socket
+                // closes; the server keeps nothing).
+                window.location.assign(href);
+            };
+            button.addEventListener('click', navigate);
+            this.cleanupFuncs.push(() => button.removeEventListener('click', navigate));
+        }
         if (!this.world.xrEnabled) {
+            // No immersive mode on this device: the menu stays, the XR
+            // enter/exit buttons do not apply.
             xrButton.setProperties({ display: 'none' });
             exitButton.setProperties({ display: 'none' });
             return;

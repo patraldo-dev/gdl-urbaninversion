@@ -1,0 +1,42 @@
+<!--
+  In-XR consent panel: explicit opt-in before any location sharing.
+  Buttons are wired in src/ui/presence-ui.js via getSceneObject/getElementById.
+-->
+<style>
+  @font-face {
+    font-family: 'UIInter';
+    src: url('../fonts/inter-latin-400-normal.ttf') format('truetype');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'UIInter';
+    src: url('../fonts/inter-latin-700-normal.ttf') format('truetype');
+    font-weight: 700;
+  }
+  .panel-root { flex-direction: column; width: 344px; }
+  .panel-content { align-items: center; flex-direction: column; padding-top: 16px; padding-left: 24px; padding-right: 24px; }
+  .heading { height: 48px; text-align: center; font-size: 24px; font-weight: 700; line-height: 24px; letter-spacing: -0.5px; color: #272727; }
+  .heading:dark { color: rgba(255, 255, 255, 0.9); }
+  .body { color: #272727; font-size: 14px; font-weight: 500; line-height: 18px; width: 100%; margin-top: 10px; }
+  .body:dark { color: rgba(255, 255, 255, 0.9); }
+  .button { justify-content: flex-start; margin-left: 24px; margin-right: 24px; margin-top: 16px; }
+  .button-deny { margin-bottom: 24px; }
+  .button-label {
+    font-family: 'UIInter';
+  }
+</style>
+<Panel class="panel-root">
+  <div class="panel-content">
+    <div class="heading">Share your presence?</div>
+    <Divider></Divider>
+    <div class="body">While active, others nearby see that you are open or quiet - never your name, face, or exact location. You can go invisible at any time.</div>
+  </div>
+  <Button id="consent-allow" class="button">
+    <ButtonIcon><CircleCheck></CircleCheck></ButtonIcon>
+    <ButtonLabel class="button-label">Share my presence</ButtonLabel>
+  </Button>
+  <Button id="consent-deny" class="button button-deny">
+    <ButtonIcon><CircleX></CircleX></ButtonIcon>
+    <ButtonLabel class="button-label">Stay invisible</ButtonLabel>
+  </Button>
+</Panel>
