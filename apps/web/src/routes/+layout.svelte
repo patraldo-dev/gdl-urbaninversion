@@ -86,6 +86,27 @@
 		padding: 1.5rem 0 1rem;
 		border-bottom: 1px solid var(--line);
 	}
+	/* Phones: let the header wrap — brand on its own row, nav links (incl.
+	   the language switcher) flowing below instead of overflowing. */
+	@media (max-width: 560px) {
+		header {
+			flex-wrap: wrap;
+			row-gap: 0.6rem;
+			padding-top: 1.1rem;
+		}
+		nav {
+			flex-wrap: wrap;
+			gap: 0.55rem 0.9rem;
+		}
+		nav a,
+		nav a.cta {
+			font-size: 0.95rem;
+		}
+		/* Bigger tap targets for the small EN/ES/FR links on touch. */
+		.langs a.lang {
+			padding: 0.3rem 0.2rem;
+		}
+	}
 	.brand {
 		font-weight: 800;
 		font-size: 1.15rem;
