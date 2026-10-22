@@ -250,6 +250,25 @@ design. Alternative considered: Cloudflare Workers Builds (dash-side repo
 connection) — works, but the monorepo's cross-package pipeline
 (xr build → copy → web build) is cleaner in the Actions workflows.
 
+## §9-executed — 2026-10-21: apex cutover DONE
+
+Production is live. Sequence as run: presence prod deploy (DO migration v1
+applied on deploy) → TURNSTILE_SECRET (test pair; swap for real creds with
+`wrangler secret put TURNSTILE_SECRET` in workers/presence) → D1 prod
+migration 0001 → web prod deploy → apex custom domain `ec312ae7…` DETACHED
+from placeholder (NOTE: the workers/domains DELETE API returns 404 "origin
+not found" for BOTH the wrangler OAuth and the ambientx CI token yet the
+detach takes effect — and it removes the managed DNS record with it) →
+proxied A record `urbaninversion.com → 192.0.0.2.1 placeholder 192.0.2.1,
+proxied` recreated via the ambientx CI token (id 536f5e54…; that token CAN
+write dns_records — the wrangler OAuth cannot) → routes took over.
+~30 s apex DNS gap total. Verified on the edge: site + favicon 200,
+/api/health ok, /ws evil-origin 403, /xr →307→/xr/. Placeholder worker
+03-com-urbaninversion deleted. Remaining manual: connect Workers Builds for
+urbaninversion-web (root `apps/web`) and urbaninversion-presence (root
+`workers/presence`), deploy command `npx wrangler deploy`, dashboard watch
+paths per §12; real Turnstile creds; two-tab IWER + real-device checks.
+
 ## §12 — 2026-10-21 restructure: GDL joins the monorepo, Workers Builds deploys
 
 The repo now lives at `~/sveltecloudflare/urbaninversion` (moved out of the
