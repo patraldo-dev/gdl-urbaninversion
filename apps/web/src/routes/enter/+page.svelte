@@ -21,32 +21,49 @@
 
 	onMount(async () => {
 		try {
-			const res = await fetch('/api/config');
-			const cfg = await res.json();
-			sitekey = cfg.turnstileSitekey || TEST_SITEKEY;
+			try {
+				const res = await fetch('/api/config');
+				const cfg = await res.json();
+				sitekey = cfg.turnstileSitekey || TEST_SITEKEY;
+			} catch {
+				sitekey = TEST_SITEKEY;
+			}
+			await loadTurnstile();
+			widgetId = api.turnstile?.render('#turnstile', {
+				sitekey,
+				callback: (/** @type {string} */ t) => (token = t),
+				'error-callback': () => (status = $t('enter.error')),
+				'expired-callback': () => (token = '')
+			});
 		} catch {
-			sitekey = TEST_SITEKEY;
+			// Script blocked (ad-blocker stubs window.turnstile as a plain
+			// object), failed, or the API never finished initializing — the
+			// button stays disabled and the visitor sees why.
+			status = $t('enter.error');
 		}
-		await loadTurnstile();
-		widgetId = api.turnstile?.render('#turnstile', {
-			sitekey,
-			callback: (/** @type {string} */ t) => (token = t),
-			'error-callback': () => (status = $t('enter.error')),
-			'expired-callback': () => (token = '')
-		});
 	});
 
 	async function loadTurnstile() {
-		if (document.getElementById('turnstile-script') || api.turnstile) return;
-		await new Promise((resolve, reject) => {
-			const s = document.createElement('script');
-			s.id = 'turnstile-script';
-			s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-			s.async = true;
-			s.onload = () => resolve(undefined);
-			s.onerror = () => reject(new Error('turnstile load failed'));
-			document.head.appendChild(s);
-		});
+		// Gate on the FUNCTION, not the object: privacy extensions stub
+		// window.turnstile as a truthy object without render(), and api.js
+		// can define the object before its methods are wired up.
+		if (typeof api.turnstile?.render === 'function') return;
+		if (!document.getElementById('turnstile-script')) {
+			await new Promise((resolve, reject) => {
+				const s = document.createElement('script');
+				s.id = 'turnstile-script';
+				s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+				s.async = true;
+				s.onload = () => resolve(undefined);
+				s.onerror = () => reject(new Error('turnstile load failed'));
+				document.head.appendChild(s);
+			});
+		}
+		const deadline = Date.now() + 10_000;
+		while (typeof api.turnstile?.render !== 'function') {
+			if (Date.now() > deadline) throw new Error('turnstile unavailable');
+			await new Promise((r) => setTimeout(r, 100));
+		}
 	}
 
 	function enter() {
