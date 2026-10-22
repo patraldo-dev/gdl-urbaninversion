@@ -13,9 +13,10 @@ function detectLocale() {
 	} catch {
 		/* no cookie access (should not happen in the static bundle) */
 	}
-	const nav =
-		typeof navigator !== 'undefined' ? (navigator.language || '').slice(0, 2).toLowerCase() : '';
-	return /** @type {readonly string[]} */ (SUPPORTED).includes(nav) ? nav : 'es';
+	// No cookie = the site's server-rendered default: Spanish. (Browser
+	// language is deliberately NOT consulted — the XR panel language must
+	// match what the surrounding site showed, cookie or no cookie.)
+	return 'es';
 }
 
 export const locale = detectLocale();
