@@ -51,7 +51,7 @@
     // Strict allowlist for the WebSocket Origin check. Production has no localhost entries.
     "ORIGIN_ALLOWLIST": ["https://urbaninversion.com"],
     // Public Turnstile sitekey (safe to expose; the secret is a Worker secret).
-    "TURNSTILE_SITEKEY": "1x00000000000000000000AA",
+    "TURNSTILE_SITEKEY": "0x4AAAAAAFhU0wjDmsJPF7wC",
     // Anti-spoof sanity radius in km; "0" = disabled. Off by default: carrier
     // IPs routinely geolocate far from the true position, and a country check
     // needs a boundary dataset (Phase 1 correction 5).
@@ -84,7 +84,7 @@
       ],
       "vars": {
         "ORIGIN_ALLOWLIST": ["https://staging.urbaninversion.com", "http://localhost:5173", "http://localhost:5174"],
-        "TURNSTILE_SITEKEY": "1x00000000000000000000AA",
+        "TURNSTILE_SITEKEY": "0x4AAAAAAFhU0wjDmsJPF7wC",
         "GEO_SANITY_MAX_KM": "0"
       }
     }
