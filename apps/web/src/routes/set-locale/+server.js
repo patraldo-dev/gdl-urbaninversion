@@ -1,6 +1,8 @@
 // Sets the preferredLanguage cookie and redirects back — the patrouch.ca
 // pattern. GET is what the nav switcher links to (works without JS wiring);
-// POST (JSON) is available for programmatic switches.
+// POST (JSON) is available for programmatic switches. NOTE: this lives at
+// /set-locale, NOT /api/locale — /api/* belongs to the presence Worker
+// (more-specific edge route), so an /api path would never reach this Worker.
 import { redirect } from '@sveltejs/kit';
 
 const SUPPORTED = ['en', 'es', 'fr'];

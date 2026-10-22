@@ -12,7 +12,7 @@
 
 	/** @param {string} lang */
 	function switchUrl(lang) {
-		return `/api/locale?lang=${lang}&redirect=${encodeURIComponent(page.url.pathname)}`;
+		return `/set-locale?lang=${lang}&redirect=${encodeURIComponent(page.url.pathname)}`;
 	}
 </script>
 
