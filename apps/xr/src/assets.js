@@ -32,4 +32,9 @@ export default defineAssets({
         type: AssetType.UIKitML,
         name: 'Consent Panel',
     },
+    'keyboard-panel': {
+        url: panel('keyboard'),
+        type: AssetType.UIKitML,
+        name: 'Keyboard Panel',
+    },
 });

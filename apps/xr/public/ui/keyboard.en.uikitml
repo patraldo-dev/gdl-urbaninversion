@@ -1,0 +1,83 @@
+<!--
+  Surface keyboard: a world-space panel tilted like it lies on a desk
+  (scene node rotationDeg), typed with finger pokes, pinch clicks or ray
+  clicks. Keys are wired in src/ui/keyboard-ui.js. The readout
+  (#typed-text) updates live: uikitml Text children recompute from the
+  container element's `text` property (setProperties({text})), so no
+  text-update API is assumed beyond the scaffold's setProperties.
+-->
+<style>
+  @font-face {
+    font-family: 'UIInter';
+    src: url('fonts/inter-latin-400-normal.ttf') format('truetype');
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: 'UIInter';
+    src: url('fonts/inter-latin-700-normal.ttf') format('truetype');
+    font-weight: 700;
+  }
+  .panel-root { flex-direction: column; width: 460px; }
+  .readout {
+    font-family: 'UIInter';
+    font-size: 15px;
+    line-height: 20px;
+    margin-top: 14px;
+    margin-left: 20px;
+    margin-right: 20px;
+    height: 40px;
+    color: #272727;
+  }
+  .readout:dark { color: rgba(255, 255, 255, 0.9); }
+  .row { flex-direction: row; justify-content: center; margin-left: 12px; margin-right: 12px; }
+  .key { flex-grow: 1; height: 42px; justify-content: center; margin-top: 8px; margin-left: 2px; margin-right: 2px; }
+  .key-wide { flex-grow: 2.5; }
+  .key-label { font-family: 'UIInter'; }
+</style>
+<Panel class="panel-root">
+  <div id="typed-text" class="readout">Type a short note - it stays on your device</div>
+  <div class="row">
+    <Button id="key-q" class="key"><ButtonLabel class="key-label">Q</ButtonLabel></Button>
+    <Button id="key-w" class="key"><ButtonLabel class="key-label">W</ButtonLabel></Button>
+    <Button id="key-e" class="key"><ButtonLabel class="key-label">E</ButtonLabel></Button>
+    <Button id="key-r" class="key"><ButtonLabel class="key-label">R</ButtonLabel></Button>
+    <Button id="key-t" class="key"><ButtonLabel class="key-label">T</ButtonLabel></Button>
+    <Button id="key-y" class="key"><ButtonLabel class="key-label">Y</ButtonLabel></Button>
+    <Button id="key-u" class="key"><ButtonLabel class="key-label">U</ButtonLabel></Button>
+    <Button id="key-i" class="key"><ButtonLabel class="key-label">I</ButtonLabel></Button>
+    <Button id="key-o" class="key"><ButtonLabel class="key-label">O</ButtonLabel></Button>
+    <Button id="key-p" class="key"><ButtonLabel class="key-label">P</ButtonLabel></Button>
+  </div>
+  <div class="row">
+    <Button id="key-a" class="key"><ButtonLabel class="key-label">A</ButtonLabel></Button>
+    <Button id="key-s" class="key"><ButtonLabel class="key-label">S</ButtonLabel></Button>
+    <Button id="key-d" class="key"><ButtonLabel class="key-label">D</ButtonLabel></Button>
+    <Button id="key-f" class="key"><ButtonLabel class="key-label">F</ButtonLabel></Button>
+    <Button id="key-g" class="key"><ButtonLabel class="key-label">G</ButtonLabel></Button>
+    <Button id="key-h" class="key"><ButtonLabel class="key-label">H</ButtonLabel></Button>
+    <Button id="key-j" class="key"><ButtonLabel class="key-label">J</ButtonLabel></Button>
+    <Button id="key-k" class="key"><ButtonLabel class="key-label">K</ButtonLabel></Button>
+    <Button id="key-l" class="key"><ButtonLabel class="key-label">L</ButtonLabel></Button>
+  </div>
+  <div class="row">
+    <Button id="key-z" class="key"><ButtonLabel class="key-label">Z</ButtonLabel></Button>
+    <Button id="key-x" class="key"><ButtonLabel class="key-label">X</ButtonLabel></Button>
+    <Button id="key-c" class="key"><ButtonLabel class="key-label">C</ButtonLabel></Button>
+    <Button id="key-v" class="key"><ButtonLabel class="key-label">V</ButtonLabel></Button>
+    <Button id="key-b" class="key"><ButtonLabel class="key-label">B</ButtonLabel></Button>
+    <Button id="key-n" class="key"><ButtonLabel class="key-label">N</ButtonLabel></Button>
+    <Button id="key-m" class="key"><ButtonLabel class="key-label">M</ButtonLabel></Button>
+    <Button id="key-backspace" class="key key-wide">
+      <ButtonIcon><Delete></Delete></ButtonIcon>
+    </Button>
+  </div>
+  <div class="row">
+    <Button id="key-space" class="key key-wide">
+      <ButtonLabel class="key-label">space</ButtonLabel>
+    </Button>
+    <Button id="key-done" class="key key-wide">
+      <ButtonIcon><Check></Check></ButtonIcon>
+      <ButtonLabel class="key-label">Done</ButtonLabel>
+    </Button>
+  </div>
+</Panel>

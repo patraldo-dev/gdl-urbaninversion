@@ -29,6 +29,7 @@
 <Panel class="panel-root">
   <div class="panel-content">
     <div class="heading">Tu presencia</div>
+    <div id="note-text" class="status">Nota</div>
     <div id="status-coarse" class="status">Ubicación demasiado imprecisa para marcadores individuales - solo se muestran conteos.</div>
     <div id="status-align" class="status">Alineación: baja - camina recto unos segundos.</div>
     <div id="status-location-error" class="status">Ubicación no disponible.</div>
@@ -50,6 +51,10 @@
   <Button id="state-invisible" class="button">
     <ButtonIcon><EyeOff></EyeOff></ButtonIcon>
     <ButtonLabel class="button-label">Invisible - desconectar</ButtonLabel>
+  </Button>
+  <Button id="open-keyboard" class="button">
+    <ButtonIcon><Pencil></Pencil></ButtonIcon>
+    <ButtonLabel class="button-label">Agregar una nota</ButtonLabel>
   </Button>
   <Button id="exit-xr" class="button button-last">
     <ButtonIcon><LogIn></LogIn></ButtonIcon>

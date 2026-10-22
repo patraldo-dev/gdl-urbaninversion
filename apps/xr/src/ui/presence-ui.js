@@ -80,6 +80,10 @@ export class PresenceUiSystem extends createSystem({}) {
 				}
 			});
 		}
+		const keyboard = panel?.getElementById('open-keyboard');
+		if (keyboard != null) {
+			bind(keyboard, () => showStage(this.world, 'keyboard'));
+		}
 	}
 
 	updateStatusRows() {

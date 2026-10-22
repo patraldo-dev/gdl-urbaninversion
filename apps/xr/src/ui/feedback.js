@@ -30,4 +30,41 @@ export function hapticPulse(world, intensity = 0.7, durationMs = 70) {
 	} catch {
 		// Vibration availability/permission varies; ignore.
 	}
+	audioBlip();
 }
+
+/**
+ * Short confirmation tick for every button press. Hands have no haptic
+ * actuators, so audio is the primary feedback on hands-first devices
+ * (the competition requires full hands usability — controllers optional).
+ * Lazily creates the AudioContext inside the user-gesture chain.
+ * @returns {void}
+ */
+export function audioBlip() {
+	try {
+		const Ctx = /** @type {typeof AudioContext} */ (
+			globalThis.AudioContext ?? globalThis.webkitAudioContext
+		);
+		if (!Ctx) return;
+		if (!blipCtx || blipCtx.state === 'closed') blipCtx = new Ctx();
+		if (blipCtx.state === 'suspended') void blipCtx.resume();
+		const t = blipCtx.currentTime;
+		const osc = blipCtx.createOscillator();
+		const gain = blipCtx.createGain();
+		osc.type = 'square';
+		osc.frequency.setValueAtTime(1400, t);
+		osc.frequency.exponentialRampToValueAtTime(900, t + 0.03);
+		gain.gain.setValueAtTime(0.0001, t);
+		gain.gain.exponentialRampToValueAtTime(0.06, t + 0.005);
+		gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+		osc.connect(gain).connect(blipCtx.destination);
+		osc.start(t);
+		osc.stop(t + 0.06);
+	} catch {
+		// Audio can be blocked before a user gesture; the visual pressed
+		// state still confirms the click.
+	}
+}
+
+/** @type {AudioContext | null} */
+let blipCtx = null;

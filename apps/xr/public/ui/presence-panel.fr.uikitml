@@ -29,6 +29,7 @@
 <Panel class="panel-root">
   <div class="panel-content">
     <div class="heading">Votre présence</div>
+    <div id="note-text" class="status">Note</div>
     <div id="status-coarse" class="status">Localisation trop imprécise pour des marqueurs individuels - comptages seulement.</div>
     <div id="status-align" class="status">Alignement : faible - marchez droit quelques secondes.</div>
     <div id="status-location-error" class="status">Localisation indisponible.</div>
@@ -50,6 +51,10 @@
   <Button id="state-invisible" class="button">
     <ButtonIcon><EyeOff></EyeOff></ButtonIcon>
     <ButtonLabel class="button-label">Invisible - déconnexion</ButtonLabel>
+  </Button>
+  <Button id="open-keyboard" class="button">
+    <ButtonIcon><Pencil></Pencil></ButtonIcon>
+    <ButtonLabel class="button-label">Ajouter une note</ButtonLabel>
   </Button>
   <Button id="exit-xr" class="button button-last">
     <ButtonIcon><LogIn></LogIn></ButtonIcon>

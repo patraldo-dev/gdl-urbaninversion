@@ -18,17 +18,23 @@ import { presenceServiceHolder } from '../presence/presence-service.js';
  */
 
 /**
- * @typedef {'menu' | 'consent' | 'presence'} PanelStage
+ * @typedef {'menu' | 'consent' | 'presence' | 'keyboard'} PanelStage
  */
 
 /** @type {PanelStage} */
 let stage = 'menu';
 
-const PANEL_IDS = /** @type {const} */ (['welcome-panel', 'consent-panel', 'presence-panel']);
+const PANEL_IDS = /** @type {const} */ ([
+	'welcome-panel',
+	'consent-panel',
+	'presence-panel',
+	'keyboard-panel',
+]);
 const STAGE_PANELS = /** @type {Record<PanelStage, string[]>} */ ({
 	menu: ['welcome-panel'],
 	consent: ['consent-panel'],
 	presence: ['presence-panel'],
+	keyboard: ['keyboard-panel'],
 });
 const CONSENT_KEY = 'urbaninversion.consent';
 
@@ -83,10 +89,12 @@ export class PanelFlowSystem extends createSystem({}) {
 
 	update() {
 		if (this.applied) return;
-		// The scene's own default is all three panels visible; collapse to
-		// the current stage as soon as every UIKitML document has loaded.
-		const ready = PANEL_IDS.every(
-			(id) => findUIKitDocument(this.world.getSceneObject(id))?.rootElement != null
+		// The scene's own default is all panels visible; collapse to the
+		// current stage as soon as the flow-critical documents are loaded.
+		// (The keyboard is optional here: a failed keyboard fetch must not
+		// leave every panel stuck visible.)
+		const ready = ['welcome-panel', 'consent-panel', 'presence-panel'].every((id) =>
+			findUIKitDocument(this.world.getSceneObject(id))?.rootElement != null
 		);
 		if (!ready) return;
 		showStage(this.world, stage);
