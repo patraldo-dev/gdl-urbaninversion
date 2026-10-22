@@ -259,8 +259,7 @@ migration 0001 → web prod deploy → apex custom domain `ec312ae7…` DETACHED
 from placeholder (NOTE: the workers/domains DELETE API returns 404 "origin
 not found" for BOTH the wrangler OAuth and the ambientx CI token yet the
 detach takes effect — and it removes the managed DNS record with it) →
-proxied A record `urbaninversion.com → 192.0.0.2.1 placeholder 192.0.2.1,
-proxied` recreated via the ambientx CI token (id 536f5e54…; that token CAN
+proxied A record `urbaninversion.com → 192.0.2.1` (placeholder IP, proxied) recreated via the ambientx CI token (id 536f5e54…; that token CAN
 write dns_records — the wrangler OAuth cannot) → routes took over.
 ~30 s apex DNS gap total. Verified on the edge: site + favicon 200,
 /api/health ok, /ws evil-origin 403, /xr →307→/xr/. Placeholder worker
