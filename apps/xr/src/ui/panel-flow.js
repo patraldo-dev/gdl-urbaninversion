@@ -2,9 +2,11 @@ import { createSystem, VisibilityState, findUIKitDocument } from '@iwsdk/core';
 import { presenceServiceHolder } from '../presence/presence-service.js';
 
 /**
- * PanelFlowSystem: exactly one UIKitML panel is ever visible.
+ * PanelFlowSystem: exactly one UIKitML panel is ever visible, and none
+ * outside the headset.
  *
- *  - 2D (non-immersive): the welcome/menu panel — the page's main menu.
+ *  - 2D (non-immersive): the DOM overlay menu (src/dom-menu.js) — no
+ *    spatial panel at all; browser text, native links.
  *  - Enter XR with no consent decision yet: the consent panel, centred.
  *  - Consent answered (either way): the presence panel — the in-XR home,
  *    which carries the Leave XR button.
@@ -12,9 +14,7 @@ import { presenceServiceHolder } from '../presence/presence-service.js';
  * Panels are hidden with display:none on the document's root element (the
  * same setProperties API presence-ui uses for rows). A display:none root
  * collapses the UIKit layout, so hidden panels neither render nor catch
- * rays — previously all three panels were up at once and the overlapping
- * world-space panels fought each other for ray hits, which made clicks
- * land on the wrong (or an invisible) panel.
+ * rays.
  */
 
 /**
@@ -24,14 +24,11 @@ import { presenceServiceHolder } from '../presence/presence-service.js';
 /** @type {PanelStage} */
 let stage = 'menu';
 
-const PANEL_IDS = /** @type {const} */ ([
-	'welcome-panel',
-	'consent-panel',
-	'presence-panel',
-	'keyboard-panel',
-]);
+const PANEL_IDS = /** @type {const} */ (['consent-panel', 'presence-panel', 'keyboard-panel']);
 const STAGE_PANELS = /** @type {Record<PanelStage, string[]>} */ ({
-	menu: ['welcome-panel'],
+	// The 2D "menu" stage is the DOM overlay (src/dom-menu.js) — no
+	// UIKitML panel is visible outside the headset.
+	menu: [],
 	consent: ['consent-panel'],
 	presence: ['presence-panel'],
 	keyboard: ['keyboard-panel'],
@@ -93,7 +90,7 @@ export class PanelFlowSystem extends createSystem({}) {
 		// current stage as soon as the flow-critical documents are loaded.
 		// (The keyboard is optional here: a failed keyboard fetch must not
 		// leave every panel stuck visible.)
-		const ready = ['welcome-panel', 'consent-panel', 'presence-panel'].every((id) =>
+		const ready = ['consent-panel', 'presence-panel'].every((id) =>
 			findUIKitDocument(this.world.getSceneObject(id))?.rootElement != null
 		);
 		if (!ready) return;

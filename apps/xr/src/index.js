@@ -6,7 +6,7 @@
  */
 import { World } from '@iwsdk/core';
 import projectOptions from 'virtual:iwsdk-project';
-import { PanelSystem } from './panel.js';
+import { createDomMenu } from './dom-menu.js';
 import { PanelFlowSystem } from './ui/panel-flow.js';
 import { SpatialDiscoverySystem } from './ecs/spatial-discovery-system.js';
 import { PresenceUiSystem } from './ui/presence-ui.js';
@@ -17,6 +17,6 @@ World.create(document.getElementById('scene-container'), projectOptions).then((w
     world.registerSystem(SpatialDiscoverySystem);
     world.registerSystem(PresenceUiSystem);
     world.registerSystem(KeyboardUiSystem);
-    world.registerSystem(PanelSystem);
+    createDomMenu(world);
     bootstrapPresence(world);
 });

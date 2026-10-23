@@ -17,11 +17,6 @@ function stockAssetUrl(assetId, fileName) {
     return `${stockAssetBase}/${assetId}/${fileName}`;
 }
 export default defineAssets({
-    'welcome-panel': {
-        url: panel('welcome'),
-        type: AssetType.UIKitML,
-        name: 'Welcome Panel',
-    },
     'presence-panel': {
         url: panel('presence-panel'),
         type: AssetType.UIKitML,

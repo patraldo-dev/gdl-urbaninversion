@@ -28,6 +28,75 @@
         -webkit-user-select: none;
         user-select: none;
       }
+      /* 2D DOM menu (the greenroom pattern: browser-page text is DOM).
+         Same brand as the site: slate ink, accent green. */
+      .dom-menu {
+        position: fixed;
+        top: 5vh;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(92vw, 480px);
+        z-index: 10;
+      }
+      .dom-menu.hidden {
+        display: none;
+      }
+      .dom-card {
+        background: #faf9f6;
+        color: #1c2733;
+        border: 1px solid #e3e0d8;
+        border-radius: 14px;
+        padding: 1.5rem 1.5rem 1.25rem;
+        box-shadow: 0 12px 32px rgba(28, 39, 51, 0.14);
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      .dom-card h1 {
+        margin: 0 0 0.6rem;
+        font-size: 1.5rem;
+        letter-spacing: -0.02em;
+        text-align: center;
+      }
+      .dom-pitch {
+        margin: 0 0 1rem;
+        color: #5b6b7b;
+        line-height: 1.55;
+        text-align: center;
+        font-size: 0.95rem;
+      }
+      .dom-enter {
+        display: block;
+        width: 100%;
+        padding: 0.8rem;
+        border: 0;
+        border-radius: 999px;
+        background: #2e8b57;
+        color: #faf9f6;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .dom-noxr {
+        margin: 0.6rem 0 0;
+        color: #a35b00;
+        font-size: 0.85rem;
+        text-align: center;
+      }
+      .dom-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        margin-top: 1rem;
+      }
+      .dom-links a {
+        display: block;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid #e3e0d8;
+        border-radius: 10px;
+        color: #1c2733;
+        text-decoration: none;
+        font-size: 0.95rem;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
