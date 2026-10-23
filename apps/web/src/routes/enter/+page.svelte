@@ -68,10 +68,11 @@
 
 	function enter() {
 		if (!consented || !token) return;
-		// Keys read by the XR app's PresenceService (session storage only).
+		// Keys read by the presence client runtime (session storage only):
+		// consent + the single-use Turnstile token for the hello frame.
 		sessionStorage.setItem('urbaninversion.consent', 'true');
 		sessionStorage.setItem('urbaninversion.turnstile', token);
-		window.location.href = '/xr/';
+		window.location.href = '/hub';
 	}
 </script>
 

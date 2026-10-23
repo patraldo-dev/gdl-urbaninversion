@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "dependencies": {
+    "@urbaninversion/presence-client": "workspace:*",
+    "@urbaninversion/shared": "workspace:*"
+  },
   "scripts": {
     "dev": "vite dev",
     "copy:xr": "node scripts/copy-xr.mjs",

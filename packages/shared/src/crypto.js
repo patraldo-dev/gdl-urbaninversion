@@ -54,7 +54,7 @@ export function frameSigningPayload(frame) {
  * @returns {Promise<string>}
  */
 export async function signFrame(frame, privateKey) {
-	const sig = await crypto.subtle.sign(ECDSA_PARAMS, privateKey, frameSigningPayload(frame));
+	const sig = await crypto.subtle.sign(ECDSA_PARAMS, privateKey, /** @type {BufferSource} */ (frameSigningPayload(frame)));
 	return bytesToB64Url(new Uint8Array(sig));
 }
 
@@ -67,7 +67,12 @@ export async function verifyFrameSig(frame, publicKey) {
 	const sig = frame['sig'];
 	if (typeof sig !== 'string' || !isB64Url(sig)) return false;
 	try {
-		return await crypto.subtle.verify(ECDSA_PARAMS, publicKey, b64UrlToBytes(sig), frameSigningPayload(frame));
+		return await crypto.subtle.verify(
+			ECDSA_PARAMS,
+			publicKey,
+			/** @type {BufferSource} */ (b64UrlToBytes(sig)),
+			/** @type {BufferSource} */ (frameSigningPayload(frame))
+		);
 	} catch {
 		return false;
 	}

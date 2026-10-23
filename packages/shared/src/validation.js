@@ -1,5 +1,6 @@
 import { isB64Url } from './crypto.js';
 import { isValidDidKeyP256 } from './did.js';
+import { normalizeDeviceProfile } from './device-profile.js';
 import { isValidGeohash } from './geo/geohash.js';
 import { isValidHandle } from './presence/handles.js';
 import { PROTOCOL_VERSION } from './version.js';
@@ -141,21 +142,28 @@ function parseHello(raw, cfg) {
 	if (!isTs(ts)) return err('bad_frame', 'hello.ts: invalid timestamp');
 	const sig = raw['sig'];
 	if (!isSig(sig)) return err('bad_sig', 'hello.sig: invalid');
-	return {
-		ok: true,
-		frame: {
-			v: PROTOCOL_VERSION,
-			op: 'hello',
-			did,
-			state,
-			cell,
-			role,
-			turnstile,
-			cfg: { v: PROTOCOL_VERSION, geohashPrecision: precision },
-			ts,
-			sig,
-		},
+	/** @type {import('./types.js').HelloFrame} */
+	const frame = {
+		v: PROTOCOL_VERSION,
+		op: 'hello',
+		did,
+		state,
+		cell,
+		role,
+		turnstile,
+		cfg: { v: PROTOCOL_VERSION, geohashPrecision: precision },
+		ts,
+		sig,
 	};
+	// Optional capability block; the server stays device-agnostic but
+	// validates the shape so malformed declarations fail loudly at the door.
+	const dev = raw['dev'];
+	if (dev !== undefined) {
+		const parsedDev = normalizeDeviceProfile(dev);
+		if (!parsedDev.ok) return err('bad_frame', `hello.${parsedDev.error}`);
+		frame.dev = parsedDev.profile;
+	}
+	return { ok: true, frame };
 }
 
 /**

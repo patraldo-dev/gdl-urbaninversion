@@ -54,6 +54,7 @@ export const VISIBLE_STATES = ['open', 'quiet'];
  * @property {HelloConfigClient} cfg
  * @property {number} ts
  * @property {string} sig
+ * @property {import('./device-profile.js').DeviceProfile} [dev] Optional capability declaration; the server stays device-agnostic.
  */
 
 /**

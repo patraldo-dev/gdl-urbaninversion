@@ -186,7 +186,7 @@ export function isValidDidKeyP256(did) {
  * @returns {Promise<CryptoKey>}
  */
 export async function didToVerifyKey(did) {
-	return crypto.subtle.importKey('raw', didToPublicBytes(did), { name: 'ECDSA', namedCurve: 'P-256' }, false, [
+	return crypto.subtle.importKey('raw', /** @type {BufferSource} */ (didToPublicBytes(did)), { name: 'ECDSA', namedCurve: 'P-256' }, false, [
 		'verify',
 	]);
 }

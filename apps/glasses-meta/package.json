@@ -1,0 +1,17 @@
+{
+  "name": "@urbaninversion/glasses-meta",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@urbaninversion/presence-client": "workspace:*",
+    "@urbaninversion/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  }
+}
