@@ -30,6 +30,7 @@ import {
  * @property {string} [wsBase] Defaults to same-origin (`wss://host/ws`).
  * @property {string} [turnstileToken] From the pre-session DOM page (Phase 1 correction 4).
  * @property {import('@urbaninversion/shared').DeviceProfile} [dev] Capability block sent in hello.
+ * @property {string} [pairTicket] Phone-pairing ticket (pt_...) — sent as hello.pair instead of turnstile.
  * @property {(kind: string, detail?: unknown) => void} [onEvent]
  */
 
@@ -53,7 +54,8 @@ export class PresenceClient {
 		this.cfg = options.cfg;
 		this.onEvent = options.onEvent ?? (() => {});
 		this.wsBase = options.wsBase ?? presenceWsUrl();
-		this.turnstileToken = options.turnstileToken ?? 'XXXX.DUMMY.TOKEN.XXXX'; // Turnstile test token (dev fallback)
+		this.turnstileToken = options.turnstileToken; // Turnstile token (dev fallback keeps old dummy only when no pairing ticket either)
+		this.pairTicket = options.pairTicket;
 		this.dev = options.dev;
 		/** @type {CryptoKey | null} */
 		this.privateKey = null;
@@ -231,10 +233,14 @@ export class PresenceClient {
 			state: this.state,
 			cell: rec.cell,
 			role: rec.role,
-			turnstile: this.turnstileToken,
+			turnstile: this.pairTicket ?? this.turnstileToken ?? 'XXXX.DUMMY.TOKEN.XXXX',
 			cfg: { v: PROTOCOL_VERSION, geohashPrecision: this.cfg.GEOHASH_PRECISION },
 			ts: Date.now(),
 		};
+		if (this.pairTicket) {
+			delete frame['turnstile'];
+			frame['pair'] = this.pairTicket;
+		}
 		if (this.dev) frame['dev'] = this.dev;
 		await this.sendSigned(rec, frame);
 		rec.helloSent = true;

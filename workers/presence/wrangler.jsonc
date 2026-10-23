@@ -24,11 +24,15 @@
   "durable_objects": {
     "bindings": [
       { "name": "PRESENCE_CELL", "class_name": "PresenceCell" },
-      { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" }
+      { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" },
+      { "name": "PAIRING", "class_name": "PairingDO" }
     ]
   },
   // VERIFY: SQLite-backed DO class declaration via wrangler migrations.
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PresenceCell", "MetricsRollup"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["PresenceCell", "MetricsRollup"] },
+    { "tag": "v2", "new_sqlite_classes": ["PairingDO"] }
+  ],
 
   "d1_databases": [
     {
@@ -67,7 +71,8 @@
       "durable_objects": {
         "bindings": [
           { "name": "PRESENCE_CELL", "class_name": "PresenceCell" },
-          { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" }
+          { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" },
+          { "name": "PAIRING", "class_name": "PairingDO" }
         ]
       },
       "d1_databases": [

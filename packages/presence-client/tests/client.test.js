@@ -57,6 +57,23 @@ describe('PresenceClient hello', () => {
 		});
 	});
 
+	it('sends hello.pair instead of turnstile when a pairTicket is set', async () => {
+		const client = new PresenceClient({
+			cfg: defaultConfig,
+			pairTicket: 'pt_abcdefghij1234567890abcdefghij123',
+		});
+		await client.start();
+		await client.updatePosition({ lat: 52.52, lon: 13.405, accuracy: 5, tsMs: Date.now() });
+		const home = FakeWebSocket.instances.at(-1);
+		home.simulateConnected();
+		await vi.waitFor(() => {
+			const hello = home.sent.find((f) => f.op === 'hello');
+			expect(hello).toBeDefined();
+			expect(hello.pair).toBe('pt_abcdefghij1234567890abcdefghij123');
+			expect(hello.turnstile).toBeUndefined();
+		});
+	});
+
 	it('omits dev when not provided (older clients stay valid)', async () => {
 		const client = new PresenceClient({ cfg: defaultConfig });
 		await client.start();

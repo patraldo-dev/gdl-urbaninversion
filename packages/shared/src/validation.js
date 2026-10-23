@@ -125,7 +125,20 @@ function parseHello(raw, cfg) {
 	const role = raw['role'];
 	if (role !== 'home' && role !== 'edge') return err('bad_frame', 'hello.role: expected home|edge');
 	const turnstile = raw['turnstile'];
-	if (!isStr(turnstile) || turnstile.length < 10 || turnstile.length > 4096) {
+	const pair = raw['pair'];
+	/** @type {string | undefined} */
+	let pairTicket;
+	if (pair !== undefined) {
+		if (!isStr(pair) || !/^pt_[A-Za-z0-9_-]{26,64}$/.test(pair)) {
+			return err('bad_frame', 'hello.pair: invalid pairing ticket');
+		}
+		pairTicket = pair;
+	}
+	if ((pairTicket !== undefined) === (isStr(turnstile) && turnstile.length >= 10)) {
+		// XOR violated: both or neither.
+		if (pairTicket !== undefined) return err('bad_frame', 'hello: pair and turnstile are mutually exclusive');
+	}
+	if (pairTicket === undefined && (!isStr(turnstile) || turnstile.length < 10 || turnstile.length > 4096)) {
 		return err('bad_frame', 'hello.turnstile: invalid token');
 	}
 	const helloCfg = raw['cfg'];
@@ -150,7 +163,9 @@ function parseHello(raw, cfg) {
 		state,
 		cell,
 		role,
-		turnstile,
+		...(pairTicket !== undefined
+			? { pair: pairTicket }
+			: { turnstile: /** @type {string} */ (turnstile) }),
 		cfg: { v: PROTOCOL_VERSION, geohashPrecision: precision },
 		ts,
 		sig,

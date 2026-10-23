@@ -283,7 +283,18 @@ export class PresenceCell extends DurableObject {
 			return;
 		}
 		const env = /** @type {import('../env.js').Env} */ (/** @type {unknown} */ (this.env));
-		if (!(await verifyTurnstile(frame.turnstile, env.TURNSTILE_SECRET ?? '', ip))) {
+		if (frame.pair !== undefined) {
+			// Glasses pairing: a phone's Turnstile-verified vouch minted this
+			// ticket; consume it atomically in the pairing DO.
+			const stub = env.PAIRING.get(env.PAIRING.idFromName('global'));
+			const res = await stub.fetch(new Request(`https://do/consume?ticket=${encodeURIComponent(frame.pair)}`, { method: 'POST' }));
+			const out = await res.json().catch(() => ({ ok: false }));
+			if (!out['ok']) {
+				this.sendError(ws, 'turnstile_failed', 'pairing ticket invalid');
+				ws.close(CLOSE_AUTH, 'pairing');
+				return;
+			}
+		} else if (!(await verifyTurnstile(frame.turnstile, env.TURNSTILE_SECRET ?? '', ip))) {
 			this.sendError(ws, 'turnstile_failed', 'session challenge failed');
 			ws.close(CLOSE_AUTH, 'turnstile');
 			return;

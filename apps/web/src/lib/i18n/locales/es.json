@@ -101,5 +101,13 @@
 	"hub.block_label": "Ocultar a esta persona por esta sesión",
 	"hub.xr_link": "Entrar a XR inmersivo",
 	"hub.sim_notice": "Dispositivo simulado (ubicación programada) para pruebas.",
-	"hub.accuracy": "precisión"
+	"hub.accuracy": "precisión",
+	"hub.pair_title": "Vincula tus lentes",
+	"hub.pair_hint": "Abre el HUD de Urban Inversion en tus lentes e introduce el código que muestra.",
+	"hub.pair_placeholder": "Código de 6 caracteres",
+	"hub.pair_button": "Vincular",
+	"hub.pair_checking": "Verificando...",
+	"hub.pair_success": "¡Vinculado! Revisa tus lentes.",
+	"hub.pair_fail": "Vinculación fallida - revisa el código e inténtalo de nuevo.",
+	"hub.pair_expired": "Ese código expiró. Genera uno nuevo en los lentes."
 }

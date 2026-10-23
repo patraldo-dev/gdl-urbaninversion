@@ -101,5 +101,13 @@
 	"hub.block_label": "Hide this person for this session",
 	"hub.xr_link": "Enter immersive XR",
 	"hub.sim_notice": "Simulated device (scripted location) for testing.",
-	"hub.accuracy": "accuracy"
+	"hub.accuracy": "accuracy",
+	"hub.pair_title": "Pair your glasses",
+	"hub.pair_hint": "Open the Urban Inversion HUD on your glasses, then enter the code it shows.",
+	"hub.pair_placeholder": "6-character code",
+	"hub.pair_button": "Pair",
+	"hub.pair_checking": "Verifying...",
+	"hub.pair_success": "Paired! Check your glasses.",
+	"hub.pair_fail": "Pairing failed - check the code and try again.",
+	"hub.pair_expired": "That code expired. Generate a new one on the glasses."
 }

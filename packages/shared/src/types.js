@@ -50,7 +50,11 @@ export const VISIBLE_STATES = ['open', 'quiet'];
  * @property {PresenceState} state
  * @property {string} cell Home geohash cell this socket is subscribing to.
  * @property {SubscriptionRole} role
- * @property {string} turnstile Turnstile token obtained on the pre-session DOM page.
+ * @property {string} [turnstile] Turnstile token obtained on the pre-session DOM page.
+ *   Exactly one of turnstile / pair must be present.
+ * @property {string} [pair] Single-use pairing ticket (pt_...) — the glasses
+ *   flow: a phone that already passed Turnstile vouches for a short code the
+ *   glasses displays; the server mints the ticket. XOR with turnstile.
  * @property {HelloConfigClient} cfg
  * @property {number} ts
  * @property {string} sig

@@ -1,10 +1,12 @@
 import { PROTOCOL_VERSION, decodeGeohash, haversineM, isGeoSanityEnabled, isValidGeohash } from '@urbaninversion/shared';
 import { presenceConfig } from './env.js';
+import { verifyTurnstile } from './turnstile.js';
 
 // Durable Object classes must be exported from the main module for the
 // runtime (and wrangler deploy) to register them.
 export { PresenceCell } from './do/presence-cell.js';
 export { MetricsRollup } from './do/metrics-rollup.js';
+export { PairingDO } from './do/pairing.js';
 
 /**
  * Presence Worker: the /api/* and /ws surface.
@@ -88,10 +90,65 @@ export default /** @type {ExportedHandler<import('./env.js').Env>} */ ({
 			if (request.method !== 'GET') return json({ error: 'method_not_allowed' }, 405);
 			return upgradeWebSocket(request, env, cfg, url);
 		}
+		if (url.pathname === '/api/pair/code' && request.method === 'POST') {
+			return pairProxy(env, '/code', request);
+		}
+		if (url.pathname === '/api/pair/vouch' && request.method === 'POST') {
+			return pairVouch(request, env);
+		}
+		if (url.pathname === '/api/pair/status' && request.method === 'GET') {
+			const code = url.searchParams.get('code') ?? '';
+			return pairProxy(env, `/status?code=${encodeURIComponent(code)}`, request);
+		}
 		if (url.pathname.startsWith('/api/')) return json({ error: 'not_found' }, 404, cors);
 		return json({ error: 'not_found' }, 404);
 	},
 });
+
+/**
+ * Forward to the global PairingDO with the trusted client IP attached.
+ * @param {import('./env.js').Env} env
+ * @param {string} path
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+async function pairProxy(env, path, request) {
+	const stub = env.PAIRING.get(env.PAIRING.idFromName('global'));
+	const doRequest = new Request(new URL(path, 'https://do'), { method: request.method });
+	const ip = request.headers.get('cf-connecting-ip') ?? '';
+	if (ip) doRequest.headers.set('x-ui-client-ip', ip);
+	return stub.fetch(doRequest);
+}
+
+/**
+ * The human check lives here: siteverify the PHONE's fresh Turnstile
+ * token, then vouch for the code the glasses displayed.
+ * @param {Request} request
+ * @param {import('./env.js').Env} env
+ * @returns {Promise<Response>}
+ */
+async function pairVouch(request, env) {
+	/** @type {Record<string, unknown>} */
+	let body;
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'bad_request' }, 400);
+	}
+	const code = body['code'];
+	const token = body['turnstile'];
+	if (typeof code !== 'string' || !/^[A-Z2-9]{6}$/.test(code)) {
+		return json({ error: 'bad_code' }, 400);
+	}
+	if (typeof token !== 'string' || token.length < 10 || token.length > 4096) {
+		return json({ error: 'bad_token' }, 400);
+	}
+	const ip = request.headers.get('cf-connecting-ip') ?? '';
+	if (!(await verifyTurnstile(token, env.TURNSTILE_SECRET ?? '', ip))) {
+		return json({ error: 'turnstile_failed' }, 403);
+	}
+	return pairProxy(env, `/vouch?code=${encodeURIComponent(code)}`, request);
+}
 
 /**
  * @param {Request} request

@@ -65,6 +65,30 @@ invented. Clients pick the intents their profile can render.
 | Even Realities G2 | — | planned: Even Hub package (`@evenrealities/even_hub_sdk`), NOT a web app |
 | Android XR / Snap Specs | — | docs-only future adapters; `apps/xr` is the natural spatial base |
 
+## Phone→glasses pairing (the glasses never runs a challenge)
+
+Turnstile challenges are awkward on a 600×600 D-pad display, so glasses
+sessions borrow a phone's human check:
+
+1. The glasses page calls `POST /api/pair/code` and displays a 6-char
+   code (5-min TTL, no ambiguous glyphs; per-IP + global caps).
+2. The phone (already in `/hub`) opens **Pair your glasses**, types the
+   code, and taps Pair. The hub fetches a FRESH Turnstile token and
+   POSTs `/api/pair/vouch {code, turnstile}` — the worker siteverifies
+   the token, then the pairing DO mints a single-use `pt_…` ticket
+   (10-min TTL) for that code.
+3. The glasses polls `GET /api/pair/status?code=…`; on `granted` it
+   receives the ticket and keeps it in sessionStorage.
+4. Its `hello` frame carries `pair` (the ticket) instead of
+   `turnstile` — strictly XOR on the wire — and PresenceCell consumes
+   the ticket atomically in the pairing DO.
+
+Threat model: the ticket is bearer proof that a human solved Turnstile
+on this origin minutes ago — one ticket per code, single-use,
+short-TTL, nothing persisted (a DO restart drops pending codes; users
+retry). State lives in one global `PairingDO` (id_from_name), all
+in-memory.
+
 ## Background behavior (the honest limit)
 
 Mobile browsers freeze backgrounded pages (Chrome Android after ~1 min,

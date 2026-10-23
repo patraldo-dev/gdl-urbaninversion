@@ -1,12 +1,11 @@
 /**
  * Urban Inversion — Meta Ray-Ban Display HUD adapter.
  *
- * A thin client: declare capabilities (DeviceProfile display 'hud2d'),
- * connect over the same signed WebSocket protocol, and render the shared
- * render-intents as one compact high-contrast line plus a status row.
- * The Turnstile session challenge runs inline (the glasses browser is a
- * normal web runtime); whether the challenge UX is acceptable on-device
- * is a hardware VERIFY item.
+ * Pairing flow (no challenge ever runs on the glasses): this page
+ * requests a short code from the pairing DO and displays it; the user
+ * types the code into their phone (which performs the Turnstile human
+ * check at /api/pair/vouch); the granted single-use ticket is stored and
+ * sent as hello.pair by the shared presence runtime.
  */
 import {
 	bootstrapPresence,
@@ -19,63 +18,92 @@ import {
 	setAudioCuesLocale,
 } from '@urbaninversion/presence-client';
 
-const TEST_SITEKEY = '1x00000000000000000000AA'; // always-pass (dev fallback)
+const STRINGS = {
+	en: {
+		gate: 'Pairing — enter this code in your phone\u2019s Urban Inversion app:',
+		waiting: 'Waiting for your phone…',
+		granted: 'Paired!',
+		expired: 'Code expired — generating a new one…',
+		unavailable: 'Pairing unavailable — check connection.',
+	},
+	es: {
+		gate: 'Vinculación — introduce este código en la app de Urban Inversion de tu teléfono:',
+		waiting: 'Esperando tu teléfono…',
+		granted: '¡Vinculado!',
+		expired: 'Código expirado — generando uno nuevo…',
+		unavailable: 'Vinculación no disponible — revisa la conexión.',
+	},
+	fr: {
+		gate: 'Appairage — saisissez ce code dans l\u2019app Urban Inversion de votre téléphone :',
+		waiting: 'En attente de votre téléphone…',
+		granted: 'Appairé !',
+		expired: 'Code expiré — génération d\u2019un nouveau…',
+		unavailable: 'Appairage indisponible — vérifiez la connexion.',
+	},
+};
 
 const $ = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
-const locale = (navigator.language || 'en').slice(0, 8);
+const locale = (navigator.language || 'en').slice(0, 2);
+const S = STRINGS[locale] ?? STRINGS.en;
 setAudioCuesLocale(locale);
 
-let token = '';
+const PAIR_KEY = 'urbaninversion.pairTicket';
+let pollTimer = null;
 let service = null;
 
-// ---------------------------------------------------------------- Turnstile
-async function loadTurnstileToken() {
-	const status = $('gate-status');
-	status.textContent = 'Loading session check…';
+// ------------------------------------------------------------------ pairing
+async function requestCode() {
+	stopPolling();
+	$('code').textContent = '······';
+	$('pair-status').textContent = '';
 	try {
-		let cfg = {};
-		try {
-			cfg = await (await fetch('/api/config')).json();
-		} catch {
-			/* config optional in dev */
-		}
-		const sitekey = cfg.turnstileSitekey || TEST_SITEKEY;
-		if (!document.getElementById('turnstile-script')) {
-			await new Promise((resolve, reject) => {
-				const s = document.createElement('script');
-				s.id = 'turnstile-script';
-				s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-				s.onload = resolve;
-				s.onerror = () => reject(new Error('turnstile load failed'));
-				document.head.appendChild(s);
-			});
-		}
-		const api = /** @type {any} */ (window);
-		while (typeof api.turnstile?.render !== 'function') {
-			await new Promise((r) => setTimeout(r, 100));
-		}
-		api.turnstile.render('#turnstile', {
-			sitekey,
-			callback: (t) => {
-				token = t;
-				/** @type {HTMLButtonElement} */ ($('start')).disabled = false;
-				status.textContent = '';
-			},
-			'error-callback': () => {
-				status.textContent = 'Session check failed — reload to retry.';
-			},
-		});
+		const res = await fetch('/api/pair/code', { method: 'POST' });
+		if (!res.ok) throw new Error(String(res.status));
+		const data = await res.json();
+		$('gate-text').textContent = S.gate;
+		$('code').textContent = data.code;
+		$('pair-status').textContent = S.waiting;
+		poll(data.code);
 	} catch {
-		status.textContent = 'Session check unavailable — reload to retry.';
+		$('pair-status').textContent = S.unavailable;
+		setTimeout(requestCode, 10_000);
 	}
+}
+
+/**
+ * @param {string} code
+ */
+function poll(code) {
+	pollTimer = setInterval(async () => {
+		try {
+			const res = await fetch(`/api/pair/status?code=${encodeURIComponent(code)}`);
+			const data = await res.json();
+			if (data.status === 'granted') {
+				stopPolling();
+				sessionStorage.setItem(PAIR_KEY, data.ticket);
+				$('pair-status').textContent = S.granted;
+				startHud();
+			} else if (data.status === 'expired') {
+				stopPolling();
+				$('pair-status').textContent = S.expired;
+				setTimeout(requestCode, 2_500);
+			}
+		} catch {
+			// Transient network loss: keep polling.
+		}
+	}, 2_000);
+}
+
+function stopPolling() {
+	if (pollTimer != null) clearInterval(pollTimer);
+	pollTimer = null;
 }
 
 // ------------------------------------------------------------------- render
 function render() {
 	const status = presenceStore.getStatus();
-	const connected = status.connected;
-	$('conn').classList.toggle('on', connected);
-	$('conn-text').textContent = connected ? 'Live' : 'Reconnecting…';
+	$('conn').classList.toggle('on', status.connected);
+	$('conn-text').textContent = status.connected ? 'Live' : 'Reconnecting…';
 	$('self').textContent = status.state.toUpperCase();
 
 	const geometry = {
@@ -88,7 +116,7 @@ function render() {
 	const aggregate = presenceStore.getAggregate();
 	if (lines.length > 0) {
 		$('main').textContent = lines[0];
-		$('sub').textContent = lines.slice(1).join(' · ') || (status.headingDeg == null ? '' : '');
+		$('sub').textContent = lines.slice(1).join(' · ');
 	} else if (aggregate) {
 		$('main').textContent = aggregateIntent(aggregate, locale).text;
 		$('sub').textContent = '';
@@ -97,23 +125,20 @@ function render() {
 		$('sub').textContent = status.locationError || '';
 	}
 	if (status.locationError) $('sub').textContent = status.locationError;
-	// Spoken cue mirrors the main line for audio-first use.
 	if (audioCuesEnabled()) speakCue($('main').textContent || '');
 }
 
-// ------------------------------------------------------------------- start
-const STATES = /** @type {const} */ (['open', 'quiet', 'observer', 'invisible']);
-let stateIdx = 0;
-
-$('start').addEventListener('click', () => {
-	if (!token) return;
-	sessionStorage.setItem('urbaninversion.consent', 'true');
-	sessionStorage.setItem('urbaninversion.turnstile', token);
+// --------------------------------------------------------------------- boot
+function startHud() {
 	$('gate').hidden = true;
 	$('hud').hidden = false;
+	sessionStorage.setItem('urbaninversion.consent', 'true');
 	service = bootstrapPresence({ profileId: 'hud2d', devOverrides: { locale } });
 	presenceStore.subscribe(render);
-});
+}
+
+const STATES = /** @type {const} */ (['open', 'quiet', 'observer', 'invisible']);
+let stateIdx = 0;
 
 $('cycle').addEventListener('click', () => {
 	if (!service) return;
@@ -128,11 +153,17 @@ $('audio').addEventListener('click', () => {
 	$('audio').textContent = next ? 'Audio: on' : 'Audio: off';
 	if (next) speakCue('Audio cues on');
 });
-
 $('audio').textContent = 'Audio: off';
+
+$('newcode').addEventListener('click', () => void requestCode());
 
 document.addEventListener('visibilitychange', () => {
 	if (document.visibilityState === 'visible') service?.resume();
 });
 
-void loadTurnstileToken();
+// Already-paired session (same tab reloaded within ticket TTL): skip the gate.
+if (sessionStorage.getItem(PAIR_KEY)) {
+	startHud();
+} else {
+	void requestCode();
+}

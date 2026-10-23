@@ -42,6 +42,65 @@
 	let summary = $state('');
 	let audioOn = $state(false);
 	let simulated = $state(false);
+	let pairCode = $state('');
+	let pairStatus = $state('');
+	let pairing = $state(false);
+
+	/**
+	 * Vouch for the glasses' pairing code: a fresh Turnstile token is
+	 * verified server-side at /api/pair/vouch — the human check that the
+	 * glasses never has to perform itself.
+	 */
+	async function pairGlasses() {
+		const code = pairCode.trim().toUpperCase();
+		if (!/^[A-Z2-9]{6}$/.test(code)) {
+			pairStatus = $t('hub.pair_fail');
+			return;
+		}
+		pairing = true;
+		pairStatus = $t('hub.pair_checking');
+		try {
+			// Load Turnstile on demand (same pattern as /enter).
+			if (!document.getElementById('turnstile-script')) {
+				await new Promise((resolve, reject) => {
+					const sc = document.createElement('script');
+					sc.id = 'turnstile-script';
+					sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+					sc.onload = resolve;
+					sc.onerror = () => reject(new Error('load'));
+					document.head.appendChild(sc);
+				});
+			}
+			const api = /** @type {any} */ (window);
+			while (typeof api.turnstile?.render !== 'function') {
+				await new Promise((r) => setTimeout(r, 100));
+			}
+			const cfg = await (await fetch('/api/config')).json();
+			const token = await new Promise((resolve, reject) => {
+				const holder = document.createElement('div');
+				holder.style.display = 'none';
+				document.body.appendChild(holder);
+				api.turnstile.render(holder, {
+					sitekey: cfg.turnstileSitekey,
+					callback: resolve,
+					'error-callback': () => reject(new Error('turnstile')),
+					'timeout-callback': () => reject(new Error('timeout'))
+				});
+				setTimeout(() => reject(new Error('timeout')), 20_000);
+			});
+			const res = await fetch('/api/pair/vouch', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ code, turnstile: token })
+			});
+			pairStatus = res.ok ? $t('hub.pair_success') : $t('hub.pair_fail');
+			if (res.ok) pairCode = '';
+		} catch {
+			pairStatus = $t('hub.pair_fail');
+		} finally {
+			pairing = false;
+		}
+	}
 
 	function refresh() {
 		snap = {
@@ -188,6 +247,23 @@
 	{/if}
 </section>
 
+<details class="pair">
+	<summary>{$t('hub.pair_title')}</summary>
+	<p class="meta dim">{$t('hub.pair_hint')}</p>
+	<div class="pair-row">
+		<input
+			bind:value={pairCode}
+			placeholder={$t('hub.pair_placeholder')}
+			maxlength="6"
+			autocomplete="off"
+			spellcheck="false"
+			onkeydown={(e) => e.key === 'Enter' && pairGlasses()}
+		/>
+		<button onclick={pairGlasses} disabled={pairing}>{$t('hub.pair_button')}</button>
+	</div>
+	{#if pairStatus}<p class="meta" role="status">{pairStatus}</p>{/if}
+</details>
+
 <p class="xr"><a href="/xr/">{$t('hub.xr_link')} →</a></p>
 
 <style>
@@ -271,6 +347,42 @@
 	}
 	.dim {
 		color: var(--muted);
+	}
+	.pair {
+		margin-top: 1.5rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		padding: 0.6rem 0.9rem;
+	}
+	.pair summary {
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.pair-row {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: 0.6rem;
+	}
+	.pair-row input {
+		flex: 1;
+		padding: 0.7rem 0.9rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		font-size: 1.05rem;
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+	}
+	.pair-row button {
+		padding: 0.7rem 1.1rem;
+		border: 0;
+		border-radius: 10px;
+		background: var(--accent);
+		color: #fff;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.pair-row button:disabled {
+		opacity: 0.6;
 	}
 	.xr {
 		margin-top: 2rem;

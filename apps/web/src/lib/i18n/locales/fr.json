@@ -101,5 +101,13 @@
 	"hub.block_label": "Masquer cette personne pour cette session",
 	"hub.xr_link": "Entrer en XR immersif",
 	"hub.sim_notice": "Appareil simulé (position programmée) pour les tests.",
-	"hub.accuracy": "précision"
+	"hub.accuracy": "précision",
+	"hub.pair_title": "Appairez vos lunettes",
+	"hub.pair_hint": "Ouvrez le HUD Urban Inversion sur vos lunettes, puis saisissez le code affiché.",
+	"hub.pair_placeholder": "Code à 6 caractères",
+	"hub.pair_button": "Appairer",
+	"hub.pair_checking": "Vérification...",
+	"hub.pair_success": "Appairé ! Vérifiez vos lunettes.",
+	"hub.pair_fail": "Échec de l'appairage - vérifiez le code et réessayez.",
+	"hub.pair_expired": "Ce code a expiré. Générez-en un nouveau sur les lunettes."
 }

@@ -7,7 +7,9 @@
     <style>
       /* Additive 600×600 display: dark background, bright high-contrast
          elements. Browser-managed D-pad navigation: plain focusable
-         buttons in DOM order; arrows move focus, Enter activates. */
+         buttons in DOM order; arrows move focus, Enter activates.
+         No Turnstile challenge runs here — pairing with a phone (which
+         performs the human check) mints the session ticket instead. */
       html,
       body {
         margin: 0;
@@ -70,20 +72,29 @@
         outline: 4px solid #27c46d;
         outline-offset: 2px;
       }
-      #turnstile {
-        min-height: 65px;
+      /* Pairing gate */
+      #code {
+        font-size: 76px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-align: center;
+        color: #27c46d;
+        margin: 8px 0;
+      }
+      #pair-status {
+        text-align: center;
       }
     </style>
   </head>
   <body>
     <div id="app">
       <div id="gate">
-        <p class="dim">Urban Inversion — nearby presence for your glasses.</p>
-        <div id="turnstile"></div>
+        <p class="dim" id="gate-text">Pairing — enter this code in your phone's Urban Inversion app:</p>
+        <div id="code">······</div>
+        <p class="dim" id="pair-status"></p>
         <div class="row">
-          <button id="start" disabled>Start</button>
+          <button id="newcode">New code</button>
         </div>
-        <p id="gate-status" class="dim"></p>
       </div>
       <div id="hud" hidden>
         <div class="status">

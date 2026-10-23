@@ -16,6 +16,7 @@ import { profileIdFromUrl, resolveProfile } from './profiles.js';
 
 const CONSENT_KEY = 'urbaninversion.consent';
 const TOKEN_KEY = 'urbaninversion.turnstile';
+const PAIR_KEY = 'urbaninversion.pairTicket';
 
 /** @type {{ service: PresenceService | null }} */
 export const presenceServiceHolder = { service: null };
@@ -85,10 +86,12 @@ export class PresenceService {
 		this.started = true;
 		const cfg = await this.fetchConfig();
 		const token = globalThis.sessionStorage?.getItem(TOKEN_KEY) ?? undefined;
+		const pairTicket = globalThis.sessionStorage?.getItem(PAIR_KEY) ?? undefined;
 		this.client = new PresenceClient({
 			cfg,
 			wsBase: this.wsBase,
 			turnstileToken: token,
+			pairTicket,
 			dev: this.dev,
 			onEvent: (kind, detail) => this.onClientEvent(kind, detail),
 		});
