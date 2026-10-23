@@ -49,8 +49,7 @@
         "PokeInteractable": {},
         "OneHandGrabbable": {
           "rotate": false,
-          "translate": true,
-          "scale": false
+          "translate": true
         },
         "ScreenSpace": {
           "top": "5vh",
@@ -76,8 +75,7 @@
         "PokeInteractable": {},
         "OneHandGrabbable": {
           "rotate": false,
-          "translate": true,
-          "scale": false
+          "translate": true
         },
         "ScreenSpace": {
           "top": "5vh",
@@ -104,8 +102,7 @@
         "PokeInteractable": {},
         "OneHandGrabbable": {
           "rotate": false,
-          "translate": true,
-          "scale": false
+          "translate": true
         }
       }
     }
