@@ -8,8 +8,29 @@
     />
     <link rel="icon" href="data:," />
     <title>xr</title>
+    <style>
+      /* Full-screen canvas app: the canvas owns every touch. Without
+         touch-action: none, small finger drift makes Chrome claim the tap
+         as a scroll / pull-to-refresh gesture (pointercancel) and button
+         clicks never fire on real phones — clean emulator taps still
+         worked, which is why this only showed up on device. */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+      body,
+      canvas {
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    </style>
   </head>
-  <body style="margin: 0">
+  <body>
     <div id="scene-container"></div>
     <script type="module" src="/src/index.js"></script>
   </body>

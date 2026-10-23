@@ -3,6 +3,7 @@ import { presenceServiceHolder } from '../presence/presence-service.js';
 import { presenceStore } from '../presence/store.js';
 import { showStage } from './panel-flow.js';
 import { hapticPulse } from './feedback.js';
+import { onTap } from './tap.js';
 
 /**
  * PresenceUiSystem: wires the in-XR UIKitML surfaces.
@@ -52,21 +53,16 @@ export class PresenceUiSystem extends createSystem({}) {
 			service.setConsent(false);
 			showStage(this.world, 'presence');
 		};
-		allow.addEventListener('click', allowHandler);
-		deny.addEventListener('click', denyHandler);
-		this.cleanupFuncs.push(
-			() => allow.removeEventListener('click', allowHandler),
-			() => deny.removeEventListener('click', denyHandler)
-		);
+		this.cleanupFuncs.push(onTap(allow, allowHandler), onTap(deny, denyHandler));
 
-		/** @param {object} el @param {() => void} handler */
+		/** @param {import('./tap.js').TapElement} el @param {() => void} handler */
 		const bind = (el, handler) => {
-			const onClick = () => {
-				hapticPulse(this.world);
-				handler();
-			};
-			el.addEventListener('click', onClick);
-			this.cleanupFuncs.push(() => el.removeEventListener('click', onClick));
+			this.cleanupFuncs.push(
+				onTap(el, () => {
+					hapticPulse(this.world);
+					handler();
+				})
+			);
 		};
 		bind(open, () => void service.setState('open'));
 		bind(quiet, () => void service.setState('quiet'));

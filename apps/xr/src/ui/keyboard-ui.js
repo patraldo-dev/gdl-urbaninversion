@@ -1,6 +1,7 @@
 import { createSystem } from '@iwsdk/core';
 import { showStage } from './panel-flow.js';
 import { hapticPulse } from './feedback.js';
+import { onTap } from './tap.js';
 
 /**
  * KeyboardUiSystem: wires the surface keyboard panel.
@@ -74,37 +75,37 @@ export class KeyboardUiSystem extends createSystem({}) {
 		for (const [id, ch] of Object.entries(CHAR_KEYS)) {
 			const button = panel?.getElementById(id);
 			if (button == null) continue; // locale layouts differ
-			const handler = () => {
-				hapticPulse(this.world, 0.5, 40);
-				type(ch);
-			};
-			button.addEventListener('click', handler);
-			this.cleanupFuncs.push(() => button.removeEventListener('click', handler));
+			this.cleanupFuncs.push(
+				onTap(button, () => {
+					hapticPulse(this.world, 0.5, 40);
+					type(ch);
+				})
+			);
 		}
 		const space = panel?.getElementById('key-space');
 		if (space != null) {
-			const handler = () => {
-				hapticPulse(this.world, 0.5, 40);
-				type(' ');
-			};
-			space.addEventListener('click', handler);
-			this.cleanupFuncs.push(() => space.removeEventListener('click', handler));
+			this.cleanupFuncs.push(
+				onTap(space, () => {
+					hapticPulse(this.world, 0.5, 40);
+					type(' ');
+				})
+			);
 		}
 		const backspaceButton = panel?.getElementById('key-backspace');
 		if (backspaceButton != null) {
-			const handler = () => {
-				hapticPulse(this.world, 0.5, 40);
-				backspace();
-			};
-			backspaceButton.addEventListener('click', handler);
-			this.cleanupFuncs.push(() => backspaceButton.removeEventListener('click', handler));
+			this.cleanupFuncs.push(
+				onTap(backspaceButton, () => {
+					hapticPulse(this.world, 0.5, 40);
+					backspace();
+				})
+			);
 		}
-		const doneHandler = () => {
-			hapticPulse(this.world);
-			showStage(this.world, 'presence');
-		};
-		done.addEventListener('click', doneHandler);
-		this.cleanupFuncs.push(() => done.removeEventListener('click', doneHandler));
+		this.cleanupFuncs.push(
+			onTap(done, () => {
+				hapticPulse(this.world);
+				showStage(this.world, 'presence');
+			})
+		);
 
 		render();
 	}

@@ -6,6 +6,7 @@
  */
 import { createSystem, VisibilityState } from '@iwsdk/core';
 import { hapticPulse } from './ui/feedback.js';
+import { onTap } from './ui/tap.js';
 
 // Site menu targets — the 2D panel doubles as the "main menu" back into
 // the site (the XR bundle has no site chrome of its own).
@@ -41,8 +42,7 @@ export class PanelSystem extends createSystem({}) {
                 // closes; the server keeps nothing).
                 window.location.assign(href);
             };
-            button.addEventListener('click', navigate);
-            this.cleanupFuncs.push(() => button.removeEventListener('click', navigate));
+            this.cleanupFuncs.push(onTap(button, navigate));
         }
         if (!this.world.xrEnabled) {
             // No immersive mode on this device: the menu stays, the XR
@@ -59,9 +59,7 @@ export class PanelSystem extends createSystem({}) {
             hapticPulse(this.world);
             this.world.exitXR();
         };
-        xrButton.addEventListener('click', launchXR);
-        exitButton.addEventListener('click', exitXR);
-        this.cleanupFuncs.push(() => xrButton.removeEventListener('click', launchXR), () => exitButton.removeEventListener('click', exitXR), this.world.visibilityState.subscribe((visibilityState) => {
+        this.cleanupFuncs.push(onTap(/** @type {object} */ (xrButton), launchXR), onTap(/** @type {object} */ (exitButton), exitXR), this.world.visibilityState.subscribe((visibilityState) => {
             const is2D = visibilityState === VisibilityState.NonImmersive;
             xrButton.setProperties({ display: is2D ? 'flex' : 'none' });
             exitButton.setProperties({ display: is2D ? 'none' : 'flex' });
