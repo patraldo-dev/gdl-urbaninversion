@@ -5,6 +5,7 @@ import { configFromEnvVars, resolveConfig } from '@urbaninversion/shared';
  * @property {DurableObjectNamespace} PRESENCE_CELL
  * @property {DurableObjectNamespace} METRICS_ROLLUP
  * @property {DurableObjectNamespace} PAIRING Global phone→glasses pairing instance.
+ * @property {DurableObjectNamespace} PLACES Global place registry instance.
  * @property {D1Database} DB
  * @property {string[]} [ORIGIN_ALLOWLIST] Strict WebSocket Origin allowlist (per environment).
  * @property {string} [TURNSTILE_SITEKEY] Public Turnstile sitekey (exposed via /api/config; not a secret).

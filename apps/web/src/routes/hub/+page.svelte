@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import QRCode from 'qrcode';
 	import { t, locale } from '#lib/i18n/index.js';
 	import {
 		bootstrapPresence,
@@ -14,7 +15,8 @@
 		markerIntents,
 		aggregateIntent,
 		describeMarker,
-		speechForMarker
+		speechForMarker,
+		rosterIntents
 	} from '@urbaninversion/presence-client';
 
 	/**
@@ -45,6 +47,116 @@
 	let pairCode = $state('');
 	let pairStatus = $state('');
 	let pairing = $state(false);
+	let placeName = $state('');
+	let nearbyPlaces = $state(/** @type {{ slug: string, display: string, meters?: number }[]} */ ([]));
+	let placeSearching = $state(false);
+	let showShare = $state(false);
+	let shareQr = $state('');
+	let copied = $state(false);
+
+	/** Look up nearby places with ONE low-accuracy fix (then stop watching). */
+	async function findNearby() {
+		placeSearching = true;
+		try {
+			const pos = await new Promise((resolve, reject) => {
+				navigator.geolocation.getCurrentPosition(resolve, reject, {
+					enableHighAccuracy: false,
+					timeout: 10_000,
+					maximumAge: 30_000
+				});
+			});
+			const res = await fetch(
+				`/api/places/nearby?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`
+			);
+			const data = await res.json();
+			nearbyPlaces = data.places ?? [];
+		} catch {
+			nearbyPlaces = [];
+		} finally {
+			placeSearching = false;
+		}
+	}
+
+	/**
+	 * Create-or-find a place by name and join its room.
+	 * @param {string} rawName
+	 * @param {boolean} create
+	 */
+	async function joinPlaceNamed(rawName, create) {
+		if (!service) return;
+		try {
+			if (create) {
+				let coords = {};
+				try {
+					const pos = await new Promise((resolve, reject) => {
+						navigator.geolocation.getCurrentPosition(resolve, reject, {
+							enableHighAccuracy: false,
+							timeout: 8_000,
+							maximumAge: 60_000
+						});
+					});
+					coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+				} catch {
+					/* a place without coords is still joinable by name */
+				}
+				const res = await fetch('/api/places', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ name: rawName, ...coords })
+				});
+				if (!res.ok) throw new Error('create failed');
+				const data = await res.json();
+				service.joinPlace(data.slug);
+				placeName = data.display;
+			} else {
+				service.joinPlace(rawName);
+				placeName = rawName;
+			}
+			await service.setState(snap.status.state === 'invisible' ? 'observer' : snap.status.state);
+		} catch {
+			placeName = '';
+		}
+	}
+
+	function leavePlace() {
+		service?.leavePlace();
+		placeName = '';
+		showShare = false;
+	}
+
+	/** slug → readable fallback ("cafe-aurora" → "Cafe Aurora"). */
+	/** @param {string | null} slug @returns {string} */
+	function prettify(slug) {
+		return (slug ?? '').replace(/-/g, ' ').replace(/\b\w/g, (/** @type {string} */ c) => c.toUpperCase());
+	}
+
+	/** The join URL others scan — same place, zero install/account. */
+	function placeUrl() {
+		const slug = snap.status.placeSlug;
+		if (!slug) return '';
+		return `${window.location.origin}/hub?place=${encodeURIComponent(slug)}`;
+	}
+
+	async function toggleShare() {
+		showShare = !showShare;
+		if (showShare && !shareQr) {
+			try {
+				shareQr = await QRCode.toDataURL(placeUrl(), { margin: 1, width: 260 });
+			} catch {
+				shareQr = '';
+			}
+		}
+	}
+
+	async function copyLink() {
+		try {
+			await navigator.clipboard.writeText(placeUrl());
+			copied = true;
+			setTimeout(() => (copied = false), 2000);
+		} catch {
+			// Clipboard needs a gesture + permissions; the QR still works.
+		}
+	}
 
 	/**
 	 * Vouch for the glasses' pairing code: a fresh Turnstile token is
@@ -112,7 +224,9 @@
 			distanceBucketM: snap.status.distanceBucketM ?? 10,
 			bearingBucketDeg: snap.status.bearingBucketDeg ?? 45
 		};
-		const intents = markerIntents(snap.markers, geometry, snap.status.headingDeg, $locale);
+		const intents = snap.status.placeSlug
+			? rosterIntents(snap.markers, $locale)
+			: markerIntents(snap.markers, geometry, snap.status.headingDeg, $locale);
 		lines = intents
 			.filter((/** @type {{ kind: string }} */ i) => i.kind === 'text_line')
 			.map((/** @type {{ text: string }} */ i) => i.text);
@@ -148,10 +262,22 @@
 	}
 
 	onMount(() => {
-		simulated = new URLSearchParams(window.location.search).get('device') === 'simulated';
+		const params = new URLSearchParams(window.location.search);
+		simulated = params.get('device') === 'simulated';
+		const placeParam = params.get('place');
 		audioOn = audioCuesEnabled();
 		setAudioCuesLocale($locale);
+		// Shareable place link: a fresh visitor (scanned a QR) must pass the
+		// consent/Turnstile gate first, then land back here to auto-join.
+		if (placeParam && sessionStorage.getItem('urbaninversion.consent') !== 'true') {
+			window.location.replace(`/enter?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+			return;
+		}
 		service = bootstrapPresence({ devOverrides: { locale: $locale } });
+		if (placeParam && /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(placeParam)) {
+			service.joinPlace(placeParam);
+			placeName = placeParam.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+		}
 		const off = presenceStore.subscribe(refresh);
 		const onVisible = () => {
 			if (document.visibilityState === 'visible') {
@@ -220,11 +346,13 @@
 	{/each}
 </div>
 
-<p class="meta">{geoLine}</p>
-<p class="meta dim">{headingLine}</p>
+{#if !snap.status.placeSlug}
+	<p class="meta">{geoLine}</p>
+	<p class="meta dim">{headingLine}</p>
 
-{#if wakeLockSupported() && snap.status.state !== 'invisible' && snap.status.state !== 'observer'}
-	<p class="meta dim">{$t('hub.wakelock_hint')}</p>
+	{#if wakeLockSupported() && snap.status.state !== 'invisible' && snap.status.state !== 'observer'}
+		<p class="meta dim">{$t('hub.wakelock_hint')}</p>
+	{/if}
 {/if}
 
 <label class="audio">
@@ -232,8 +360,69 @@
 	<span>{audioOn ? $t('hub.audio_on') : $t('hub.audio_off')}</span>
 </label>
 
+{#if snap.status.placeSlug}
+	<section class="place-card" aria-live="polite">
+		<div class="place-banner">
+			<h2>{$t('hub.place_at').replace('{place}', placeName || prettify(snap.status.placeSlug))}</h2>
+			<div class="banner-actions">
+				<button class="leave" onclick={toggleShare}>{$t('hub.place_share')}</button>
+				<button class="leave" onclick={leavePlace}>{$t('hub.place_leave')}</button>
+			</div>
+		</div>
+		{#if showShare}
+			<div class="share">
+				{#if shareQr}
+					<img src={shareQr} alt="QR: {placeUrl()}" width="180" height="180" />
+				{/if}
+				<p class="meta dim">{$t('hub.place_scan_hint')}</p>
+				<button class="leave" onclick={copyLink}>{copied ? $t('hub.place_copied') : $t('hub.place_copy')}</button>
+			</div>
+		{/if}
+		<h3>{$t('hub.place_here')}</h3>
+		{#if lines.length > 0}
+			<ul class="roster">
+				{#each lines as line (line)}
+					<li>{line}</li>
+				{/each}
+			</ul>
+		{:else if summary}
+			<p class="summary">{summary}</p>
+		{:else}
+			<p class="dim">{$t('hub.place_here_empty')}</p>
+		{/if}
+	</section>
+{:else}
+	<details class="place">
+		<summary>{$t('hub.place_title')}</summary>
+		<p class="meta dim">{$t('hub.place_hint')}</p>
+		<h3>{$t('hub.place_nearby')}</h3>
+		{#if placeSearching}
+			<p class="meta dim">{$t('hub.place_searching')}</p>
+		{:else if nearbyPlaces.length > 0}
+			<ul class="nearby-list">
+				{#each nearbyPlaces as p (p.slug)}
+					<li>
+						<button onclick={() => joinPlaceNamed(p.slug, false)}>{$t('hub.place_join')}</button>
+						<span>{p.display}{p.meters != null ? ` · ${p.meters} m` : ''}</span>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+		<button class="find" onclick={findNearby}>{$t('hub.place_nearby')}</button>
+		<div class="pair-row">
+			<input
+				bind:value={placeName}
+				placeholder={$t('hub.place_search_placeholder')}
+				maxlength="60"
+				onkeydown={(e) => e.key === 'Enter' && joinPlaceNamed(placeName, true)}
+			/>
+			<button onclick={() => joinPlaceNamed(placeName, true)}>{$t('hub.place_create')}</button>
+		</div>
+	</details>
+{/if}
+
 <section class="nearby" aria-live="polite">
-	<h2>{$t('hub.nearby_title')}</h2>
+	<h2>{snap.status.placeSlug ? $t('hub.nearby_title') : $t('hub.nearby_title')}</h2>
 	{#if lines.length > 0}
 		<ul>
 			{#each lines as line (line)}
@@ -383,6 +572,114 @@
 	}
 	.pair-row button:disabled {
 		opacity: 0.6;
+	}
+	.place-card {
+		margin-top: 1.25rem;
+		border: 2px solid var(--accent);
+		border-radius: 14px;
+		padding: 0.9rem 1.1rem;
+	}
+	.place-banner {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.8rem;
+	}
+	.place-banner h2 {
+		margin: 0;
+	}
+	.place-banner .leave {
+		padding: 0.5rem 0.9rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: #fff;
+		cursor: pointer;
+		font-size: 0.85rem;
+	}
+	.place-card h3 {
+		margin: 0.8rem 0 0.3rem;
+		font-size: 0.9rem;
+		color: var(--muted);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+	.banner-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.share {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.8rem;
+		padding: 0.8rem;
+		border: 1px dashed var(--line);
+		border-radius: 10px;
+	}
+	.share img {
+		background: #fff;
+		padding: 6px;
+		border-radius: 8px;
+	}
+	.roster {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.roster li {
+		font-size: 1.1rem;
+		font-weight: 700;
+		padding: 0.45rem 0.9rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		background: #fff;
+	}
+	.place {
+		margin-top: 1rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		padding: 0.6rem 0.9rem;
+	}
+	.place summary {
+		cursor: pointer;
+		font-weight: 600;
+	}
+	.place h3 {
+		margin: 0.8rem 0 0.3rem;
+		font-size: 0.9rem;
+	}
+	.nearby-list {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 0.4rem;
+	}
+	.nearby-list li {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.35rem 0;
+	}
+	.nearby-list button {
+		padding: 0.35rem 0.8rem;
+		border: 0;
+		border-radius: 999px;
+		background: var(--accent);
+		color: #fff;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.place .find {
+		margin: 0.3rem 0 0.6rem;
+		padding: 0.45rem 0.8rem;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		background: #fff;
+		cursor: pointer;
+		font-size: 0.85rem;
 	}
 	.xr {
 		margin-top: 2rem;

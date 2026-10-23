@@ -109,5 +109,20 @@
 	"hub.pair_checking": "Vérification...",
 	"hub.pair_success": "Appairé ! Vérifiez vos lunettes.",
 	"hub.pair_fail": "Échec de l'appairage - vérifiez le code et réessayez.",
-	"hub.pair_expired": "Ce code a expiré. Générez-en un nouveau sur les lunettes."
+	"hub.pair_expired": "Ce code a expiré. Générez-en un nouveau sur les lunettes.",
+	"hub.place_title": "Où êtes-vous ?",
+	"hub.place_nearby": "Lieux à proximité",
+	"hub.place_searching": "Recherche de lieux à proximité…",
+	"hub.place_search_placeholder": "Nommez ce lieu (ex. Café Aurora)",
+	"hub.place_create": "Créer et rejoindre",
+	"hub.place_join": "Rejoindre",
+	"hub.place_at": "Chez {place}",
+	"hub.place_leave": "Quitter le lieu",
+	"hub.place_here": "Présents maintenant",
+	"hub.place_here_empty": "Personne pour l'instant — le premier ouvre la salle.",
+	"hub.place_hint": "Mode rue : votre présence suit votre position. Rejoignez un lieu pour être trouvable sans GPS à l'intérieur.",
+	"hub.place_share": "Partager ce lieu",
+	"hub.place_copy": "Copier le lien",
+	"hub.place_copied": "Lien copié !",
+	"hub.place_scan_hint": "D'autres scannent pour rejoindre — sans app, sans compte."
 }

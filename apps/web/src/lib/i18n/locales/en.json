@@ -109,5 +109,20 @@
 	"hub.pair_checking": "Verifying...",
 	"hub.pair_success": "Paired! Check your glasses.",
 	"hub.pair_fail": "Pairing failed - check the code and try again.",
-	"hub.pair_expired": "That code expired. Generate a new one on the glasses."
+	"hub.pair_expired": "That code expired. Generate a new one on the glasses.",
+	"hub.place_title": "Where are you?",
+	"hub.place_nearby": "Places near you",
+	"hub.place_searching": "Looking for places nearby…",
+	"hub.place_search_placeholder": "Name this place (e.g. Café Aurora)",
+	"hub.place_create": "Create & join",
+	"hub.place_join": "Join",
+	"hub.place_at": "At {place}",
+	"hub.place_leave": "Leave place",
+	"hub.place_here": "Here now",
+	"hub.place_here_empty": "Nobody here yet — the first to open the room.",
+	"hub.place_hint": "Street mode: presence follows your location. Join a place to be findable without GPS indoors.",
+	"hub.place_share": "Share this place",
+	"hub.place_copy": "Copy link",
+	"hub.place_copied": "Link copied!",
+	"hub.place_scan_hint": "Others scan to join — no app, no account."
 }

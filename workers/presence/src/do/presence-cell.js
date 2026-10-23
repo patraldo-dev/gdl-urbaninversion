@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
 	PROTOCOL_VERSION,
+	isPlaceCell,
 	TokenBucket,
 	bearingBucketIndex,
 	bearingDeg,
@@ -123,6 +124,8 @@ export class PresenceCell extends DurableObject {
 	bucketStates = null;
 	/** @type {PendingFlush | null} */
 	pendingFlush = null;
+	/** @type {Map<string, string>} did → latest minted session ticket */
+	sessionTickets = new Map();
 
 	/**
 	 * @param {DurableObjectState} ctx
@@ -151,7 +154,9 @@ export class PresenceCell extends DurableObject {
 		const url = new URL(request.url);
 		if (url.pathname !== '/ws') return new Response('not found', { status: 404 });
 		const cell = url.searchParams.get('cell') ?? '';
-		if (!isValidGeohash(cell, cfg.GEOHASH_PRECISION)) return new Response('bad cell', { status: 400 });
+		if (!isValidGeohash(cell, cfg.GEOHASH_PRECISION) && !isPlaceCell(cell)) {
+			return new Response('bad cell', { status: 400 });
+		}
 		if (this.cell === '') this.cell = cell;
 
 		const ip = request.headers.get('x-ui-client-ip') ?? '';
@@ -284,8 +289,9 @@ export class PresenceCell extends DurableObject {
 		}
 		const env = /** @type {import('../env.js').Env} */ (/** @type {unknown} */ (this.env));
 		if (frame.pair !== undefined) {
-			// Glasses pairing: a phone's Turnstile-verified vouch minted this
-			// ticket; consume it atomically in the pairing DO.
+			// Glasses pairing or session ticket: consume atomically in the
+			// pairing DO (both are pt_ tickets; glasses ones were minted by a
+			// phone vouch, session ones by a previous verified hello).
 			const stub = env.PAIRING.get(env.PAIRING.idFromName('global'));
 			const res = await stub.fetch(new Request(`https://do/consume?ticket=${encodeURIComponent(frame.pair)}`, { method: 'POST' }));
 			const out = await res.json().catch(() => ({ ok: false }));
@@ -298,6 +304,19 @@ export class PresenceCell extends DurableObject {
 			this.sendError(ws, 'turnstile_failed', 'session challenge failed');
 			ws.close(CLOSE_AUTH, 'turnstile');
 			return;
+		}
+
+		// Mint a fresh session ticket on every verified hello: Turnstile
+		// tokens are single-use at siteverify, so the client must switch to
+		// ticket auth (hello.pair) for every subsequent socket — edge cells,
+		// reconnects, place joins.
+		try {
+			const stub = env.PAIRING.get(env.PAIRING.idFromName('global'));
+			const mint = await stub.fetch(new Request('https://do/mint', { method: 'POST' }));
+			const out = await mint.json();
+			if (typeof out['ticket'] === 'string') this.sessionTickets.set(frame.did, out['ticket']);
+		} catch {
+			// Ticket rotation is best-effort; the session keeps its old ticket.
 		}
 		if (frame.state === 'invisible') {
 			// INVISIBLE never holds server state; the socket simply goes away.
@@ -399,7 +418,14 @@ export class PresenceCell extends DurableObject {
 			return;
 		}
 		member.state = state;
-		member.coarse = state === 'observer' || member.coarse;
+		// Recompute coarse from the current truth: observer state, or (street
+		// mode) GPS accuracy. Sticky-coarse kept former observers in
+		// aggregate-only forever after flipping to open.
+		member.coarse =
+			state === 'observer' ||
+			(!isPlaceCell(this.cell) &&
+			 member.pos !== undefined &&
+			 member.pos.accuracy > cfg.MIN_ACCURACY_M);
 		this.noteBucketState(member.did, state);
 		this.writeAttachment(member);
 		this.sendHelloAck(member, now);
@@ -454,6 +480,7 @@ export class PresenceCell extends DurableObject {
 	sweep(now) {
 		const cfg = this.config();
 		const epoch = handleEpoch(now, cfg.HANDLE_ROTATION_S);
+		if (isPlaceCell(this.cell)) return this.sweepPlace(now);
 		const fresh = [...this.members.values()].filter(
 			(m) => m.pos !== undefined && now - m.pos.tsMs <= cfg.POSITION_TTL_S * 1000
 		);
@@ -506,6 +533,47 @@ export class PresenceCell extends DurableObject {
 			collected.sort((a, b) => a.dist - b.dist);
 			const markers = collected.slice(0, cfg.MAX_MARKERS).map((c) => c.marker);
 			this.maybeSend(observer, { op: 'markers', markers });
+		}
+	}
+
+	/**
+	 * Place rooms (cafés, gyms): everyone who joined IS here — no
+	 * positions required, no distances. Observers get the aggregate;
+	 * others get a roster (markers with dist/brng 0, join order) that
+	 * clients render without distance text. Quiet visibility and blocks
+	 * still apply.
+	 * @param {number} now
+	 */
+	sweepPlace(now) {
+		const cfg = this.config();
+		const roster = [...this.members.values()].filter(
+			(m) => m.role === 'home' && (m.state === 'open' || m.state === 'quiet')
+		);
+		for (const observer of this.members.values()) {
+			if (observer.coarse) {
+				let open = 0;
+				let quiet = 0;
+				for (const subject of roster) {
+					if (subject === observer) continue;
+					if (observer.blocked.has(subject.did) || subject.blocked.has(observer.did)) continue;
+					if (subject.state === 'open') open++;
+					else quiet++;
+				}
+				this.maybeSend(observer, { op: 'aggregate', counts: { open, quiet } });
+				continue;
+			}
+			/** @type {import('@urbaninversion/shared').MarkerEntry[]} */
+			const markers = [];
+			for (const subject of roster) {
+				if (subject === observer) continue;
+				if (subject.state === 'quiet') {
+					if (cfg.QUIET_VISIBILITY === 'aggregate') continue;
+					if (cfg.QUIET_VISIBILITY === 'quiet_only' && observer.state !== 'quiet') continue;
+				}
+				if (observer.blocked.has(subject.did) || subject.blocked.has(observer.did)) continue;
+				markers.push({ handle: this.handleFor(subject, now), state: subject.state, dist: 0, brng: 0 });
+			}
+			this.maybeSend(observer, { op: 'markers', markers: markers.slice(0, cfg.MAX_MARKERS) });
 		}
 	}
 
@@ -569,6 +637,8 @@ export class PresenceCell extends DurableObject {
 				quietVisibility: cfg.QUIET_VISIBILITY,
 			},
 		};
+		const ticket = this.sessionTickets.get(member.did);
+		if (ticket) frame.pair = ticket;
 		try {
 			member.ws.send(JSON.stringify(frame));
 		} catch {
@@ -701,26 +771,30 @@ export class PresenceCell extends DurableObject {
 		const cfg = this.config();
 		const now = Date.now();
 
-		// TTL purges: stale positions close the socket (webSocketClose cleans
-		// up the roster), members who never sent a position are dropped.
-		for (const m of [...this.members.values()]) {
-			if (m.pos && now - m.pos.tsMs > cfg.POSITION_TTL_S * 1000) {
-				try {
-					m.ws.close(CLOSE_TTL, 'position ttl expired');
-				} catch {
-					this.dropMember(m.ws, 'ttl');
+		// TTL purges (street cells only): stale positions close the socket
+		// (webSocketClose cleans up the roster), members who never sent a
+		// position are dropped. Place members carry no positions by design.
+		if (!isPlaceCell(this.cell)) {
+			for (const m of [...this.members.values()]) {
+				if (m.pos && now - m.pos.tsMs > cfg.POSITION_TTL_S * 1000) {
+					try {
+						m.ws.close(CLOSE_TTL, 'position ttl expired');
+					} catch {
+						this.dropMember(m.ws, 'ttl');
+					}
 				}
 			}
-		}
-		for (const m of [...this.members.values()]) {
-			if (!m.pos && now - m.joinedMs > cfg.POSITION_TTL_S * 2_000) {
-				this.dropMember(m.ws, 'no position');
+			for (const m of [...this.members.values()]) {
+				if (!m.pos && now - m.joinedMs > cfg.POSITION_TTL_S * 2_000) {
+					this.dropMember(m.ws, 'no position');
+				}
 			}
 		}
 
 		// Bucket close: report to the parent's MetricsRollup (retry slot).
+		// Place rooms are deliberately excluded from street-cell metrics.
 		const currentBucket = d1BucketStart(now, cfg.D1_BUCKET_S);
-		if (this.bucketStates && this.bucketStates.bucket < currentBucket) {
+		if (!isPlaceCell(this.cell) && this.bucketStates && this.bucketStates.bucket < currentBucket) {
 			let open = 0;
 			let quiet = 0;
 			let observer = 0;

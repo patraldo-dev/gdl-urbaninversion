@@ -96,13 +96,23 @@ export class PresenceService {
 			onEvent: (kind, detail) => this.onClientEvent(kind, detail),
 		});
 		await this.client.start();
-		this.locationProvider.start(
+		let joinedPlace = false;
+		if (this.pendingPlace) {
+			const slug = this.pendingPlace;
+			this.pendingPlace = null;
+			this.client.joinPlace(slug);
+			presenceStore.patchStatus({ placeSlug: slug });
+			joinedPlace = true;
+		}
+		if (!joinedPlace) this.locationProvider.start(
 			(fix) => void this.onFix(fix),
 			(msg) => presenceStore.patchStatus({ locationError: msg })
 		);
-		this.headingProvider.start((heading, source) =>
-			presenceStore.patchStatus({ headingDeg: heading, headingSource: source })
-		);
+		if (!joinedPlace) {
+			this.headingProvider.start((heading, source) =>
+				presenceStore.patchStatus({ headingDeg: heading, headingSource: source })
+			);
+		}
 		presenceStore.patchStatus({ state: this.client.state, connected: true });
 	}
 
@@ -131,6 +141,39 @@ export class PresenceService {
 				() => {},
 				() => {},
 				{ maximumAge: 5_000, timeout: 10_000 }
+			);
+		}
+	}
+
+	/**
+	 * Join a named place (café/gyg). Providers stop — a place room needs
+	 * no GPS or compass; presence is membership itself.
+	 * @param {string} slug
+	 */
+	joinPlace(slug) {
+		presenceStore.patchStatus({ placeSlug: slug });
+		this.locationProvider.stop();
+		this.headingProvider.stop();
+		if (!this.client) {
+			// start() is still in flight (config fetch) — join when ready.
+			this.pendingPlace = slug;
+			return;
+		}
+		this.client.joinPlace(slug);
+	}
+
+	/** Leave the place, back to street-cell presence. */
+	leavePlace() {
+		this.pendingPlace = null;
+		presenceStore.patchStatus({ placeSlug: null });
+		this.client?.leavePlace();
+		if (this.started && this.consented) {
+			this.locationProvider.start(
+				(fix) => void this.onFix(fix),
+				(msg) => presenceStore.patchStatus({ locationError: msg })
+			);
+			this.headingProvider.start((heading, source) =>
+				presenceStore.patchStatus({ headingDeg: heading, headingSource: source })
 			);
 		}
 	}
@@ -197,6 +240,11 @@ export class PresenceService {
 					distanceBucketM: ack.cfg.distanceBucketM,
 					bearingBucketDeg: ack.cfg.bearingBucketDeg,
 				});
+				// Persist the rotated session ticket: reloads within the TTL
+				// reconnect without another Turnstile solve.
+				if (ack.pair != null) {
+					globalThis.sessionStorage?.setItem(PAIR_KEY, ack.pair);
+				}
 				break;
 			}
 			case 'markers':

@@ -123,6 +123,13 @@ export class PairingDO {
 			return json({ status: 'granted', ticket: entry.ticket, expiresInS: Math.round(TICKET_TTL_MS / 1000) });
 		}
 
+		if (url.pathname === '/mint' && request.method === 'POST') {
+			// Internal (DO→DO only; no worker route exposes this): mint a
+			// fresh session ticket after a verified hello, enabling ticket
+			// rotation on every reconnect/socket.
+			return json({ ticket: this.newTicket(now) });
+		}
+
 		if (url.pathname === '/consume' && request.method === 'POST') {
 			const ticket = url.searchParams.get('ticket') ?? '';
 			const exp = this.tickets.get(ticket);

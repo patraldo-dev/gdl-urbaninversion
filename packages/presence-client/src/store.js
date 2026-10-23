@@ -13,6 +13,7 @@
  * @property {number | null} headingDeg Current absolute heading (compass or GPS course), null when unknown.
  * @property {'no-data' | 'permission' | 'reading' | 'gps-course'} headingSource
  * @property {string} locationError
+ * @property {string | null} placeSlug Joined place room (null = street cells).
  * @property {number} [accuracyM]
  * @property {number} [distanceBucketM] Server bucket geometry from hello-ack.
  * @property {number} [bearingBucketDeg] Server bucket geometry from hello-ack.
@@ -25,6 +26,7 @@ const status = {
 	headingDeg: null,
 	headingSource: /** @type {'no-data' | 'permission' | 'reading' | 'gps-course'} */ ('no-data'),
 	locationError: '',
+	placeSlug: null,
 };
 
 /** @type {import('@urbaninversion/shared').MarkerEntry[]} */

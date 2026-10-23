@@ -116,6 +116,7 @@ export const VISIBLE_STATES = ['open', 'quiet'];
  * @property {SubscriptionRole} role
  * @property {number} serverTs Server unix ms at send time (clock offset source).
  * @property {boolean} coarse True when this client receives aggregates only (OBSERVER or accuracy worse than MIN_ACCURACY_M).
+ * @property {string} [pair] Fresh single-use session ticket — the client sends it as hello.pair on every subsequent socket (edges, reconnects, place joins) instead of the consumed one-shot Turnstile token.
  * @property {HelloConfigServer} cfg
  */
 

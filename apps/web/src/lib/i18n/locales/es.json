@@ -109,5 +109,20 @@
 	"hub.pair_checking": "Verificando...",
 	"hub.pair_success": "¡Vinculado! Revisa tus lentes.",
 	"hub.pair_fail": "Vinculación fallida - revisa el código e inténtalo de nuevo.",
-	"hub.pair_expired": "Ese código expiró. Genera uno nuevo en los lentes."
+	"hub.pair_expired": "Ese código expiró. Genera uno nuevo en los lentes.",
+	"hub.place_title": "¿Dónde estás?",
+	"hub.place_nearby": "Lugares cerca de ti",
+	"hub.place_searching": "Buscando lugares cerca…",
+	"hub.place_search_placeholder": "Nombra este lugar (p. ej. Café Aurora)",
+	"hub.place_create": "Crear y unirme",
+	"hub.place_join": "Unirme",
+	"hub.place_at": "En {place}",
+	"hub.place_leave": "Salir del lugar",
+	"hub.place_here": "Aquí ahora",
+	"hub.place_here_empty": "Nadie aquí aún — el primero en abrir la sala.",
+	"hub.place_hint": "Modo calle: tu presencia sigue tu ubicación. Únete a un lugar para ser encontrable sin GPS bajo techo.",
+	"hub.place_share": "Comparte este lugar",
+	"hub.place_copy": "Copiar enlace",
+	"hub.place_copied": "¡Enlace copiado!",
+	"hub.place_scan_hint": "Otros escanean para unirse — sin app, sin cuenta."
 }

@@ -25,13 +25,15 @@
     "bindings": [
       { "name": "PRESENCE_CELL", "class_name": "PresenceCell" },
       { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" },
-      { "name": "PAIRING", "class_name": "PairingDO" }
+      { "name": "PAIRING", "class_name": "PairingDO" },
+      { "name": "PLACES", "class_name": "PlacesDO" }
     ]
   },
   // VERIFY: SQLite-backed DO class declaration via wrangler migrations.
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["PresenceCell", "MetricsRollup"] },
-    { "tag": "v2", "new_sqlite_classes": ["PairingDO"] }
+    { "tag": "v2", "new_sqlite_classes": ["PairingDO"] },
+    { "tag": "v3", "new_sqlite_classes": ["PlacesDO"] }
   ],
 
   "d1_databases": [
@@ -72,7 +74,8 @@
         "bindings": [
           { "name": "PRESENCE_CELL", "class_name": "PresenceCell" },
           { "name": "METRICS_ROLLUP", "class_name": "MetricsRollup" },
-          { "name": "PAIRING", "class_name": "PairingDO" }
+          { "name": "PAIRING", "class_name": "PairingDO" },
+          { "name": "PLACES", "class_name": "PlacesDO" }
         ]
       },
       "d1_databases": [
@@ -89,7 +92,10 @@
       ],
       "vars": {
         "ORIGIN_ALLOWLIST": ["https://staging.urbaninversion.com", "http://localhost:5173", "http://localhost:5174"],
-        "TURNSTILE_SITEKEY": "0x4AAAAAAFhU0wjDmsJPF7wC",
+        // Staging uses Cloudflare's PUBLIC documented test keys (widget always
+        // passes, siteverify always passes) so CI/E2E can run full session
+        // loops. Production keeps the real sitekey + secret.
+        "TURNSTILE_SITEKEY": "1x00000000000000000000AA",
         "GEO_SANITY_MAX_KM": "0"
       }
     }

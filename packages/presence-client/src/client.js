@@ -8,6 +8,7 @@ import {
 	parseServerFrame,
 	signFrame,
 } from '@urbaninversion/shared';
+import { presenceStore } from './store.js';
 
 /**
  * PresenceClient: the signed WebSocket protocol client.
@@ -56,6 +57,8 @@ export class PresenceClient {
 		this.wsBase = options.wsBase ?? presenceWsUrl();
 		this.turnstileToken = options.turnstileToken; // Turnstile token (dev fallback keeps old dummy only when no pairing ticket either)
 		this.pairTicket = options.pairTicket;
+		/** @type {string | null} */
+		this.placeCell = null;
 		this.dev = options.dev;
 		/** @type {CryptoKey | null} */
 		this.privateKey = null;
@@ -71,6 +74,25 @@ export class PresenceClient {
 		this.lastPos = null;
 	}
 
+	/**
+	 * Join a named place room (café/gyg): one home-role socket, no edges,
+	 * no positions needed. Leaves any previous sockets first.
+	 * @param {string} slug
+	 */
+	joinPlace(slug) {
+		this.leavePlace();
+		this.placeCell = `place:${slug}`;
+		this.connect(this.placeCell, 'home');
+	}
+
+	/** Leave place mode (back to street cells on the next position update). */
+	leavePlace() {
+		if (!this.placeCell) return;
+		this.disconnect(this.placeCell);
+		this.placeCell = null;
+		presenceStore.setMarkers([]);
+	}
+
 	/** Generate the ephemeral session key. Resolves with the did. @returns {Promise<string>} */
 	async start() {
 		const pair = await generateSessionKeyPair();
@@ -84,6 +106,7 @@ export class PresenceClient {
 	 */
 	async updatePosition(fix) {
 		if (!this.privateKey || this.closedByUser) return;
+		if (this.placeCell) return; // place rooms carry no positions
 		const pos = { lat: fix.lat, lon: fix.lon };
 		const homeCell = encodeGeohash(fix.lat, fix.lon, this.cfg.GEOHASH_PRECISION);
 
@@ -267,6 +290,8 @@ export class PresenceClient {
 					this.coarse = frame.coarse;
 					this.onEvent('coarse-changed', frame.coarse);
 				}
+				// Adopt the rotated session ticket for all future hellos.
+				if (frame.pair != null) this.pairTicket = frame.pair;
 				this.onEvent('hello-ack', frame);
 				break;
 			case 'markers':

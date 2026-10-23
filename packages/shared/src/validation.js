@@ -2,6 +2,7 @@ import { isB64Url } from './crypto.js';
 import { isValidDidKeyP256 } from './did.js';
 import { normalizeDeviceProfile } from './device-profile.js';
 import { isValidGeohash } from './geo/geohash.js';
+import { isPlaceCell } from './places.js';
 import { isValidHandle } from './presence/handles.js';
 import { PROTOCOL_VERSION } from './version.js';
 
@@ -119,8 +120,8 @@ function parseHello(raw, cfg) {
 		return err('bad_state', 'hello.state: unknown presence state');
 	}
 	const cell = raw['cell'];
-	if (!isStr(cell) || !isValidGeohash(cell, cfg.GEOHASH_PRECISION)) {
-		return err('bad_cell', `hello.cell: expected ${cfg.GEOHASH_PRECISION}-char geohash`);
+	if (!isStr(cell) || (!isValidGeohash(cell, cfg.GEOHASH_PRECISION) && !isPlaceCell(cell))) {
+		return err('bad_cell', `hello.cell: expected ${cfg.GEOHASH_PRECISION}-char geohash or place:slug`);
 	}
 	const role = raw['role'];
 	if (role !== 'home' && role !== 'edge') return err('bad_frame', 'hello.role: expected home|edge');
@@ -303,7 +304,9 @@ export function parseServerFrame(data, cfg) {
  */
 function parseHelloAck(raw) {
 	const cell = raw['cell'];
-	if (!isStr(cell) || !isValidGeohash(cell)) return err('bad_cell', 'hello-ack.cell: invalid');
+	if (!isStr(cell) || (!isValidGeohash(cell) && !isPlaceCell(cell))) {
+		return err('bad_cell', 'hello-ack.cell: invalid');
+	}
 	const role = raw['role'];
 	if (role !== 'home' && role !== 'edge') return err('bad_frame', 'hello-ack.role: expected home|edge');
 	const serverTs = raw['serverTs'];
@@ -328,18 +331,22 @@ function parseHelloAck(raw) {
 	if (quietVisibility !== 'everyone' && quietVisibility !== 'quiet_only' && quietVisibility !== 'aggregate') {
 		return err('bad_frame', 'hello-ack.cfg.quietVisibility');
 	}
-	return {
-		ok: true,
-		frame: {
-			v: PROTOCOL_VERSION,
-			op: 'hello-ack',
-			cell,
-			role,
-			serverTs,
-			coarse,
-			cfg: { distanceBucketM, bearingBucketDeg, proximityRadiusM, handleRotationS, minAccuracyM, quietVisibility },
-		},
+	const pair = raw['pair'];
+	if (pair !== undefined && (!isStr(pair) || !/^pt_[A-Za-z0-9_-]{26,64}$/.test(pair))) {
+		return err('bad_frame', 'hello-ack.pair: invalid ticket');
+	}
+	/** @type {import('./types.js').HelloAckFrame} */
+	const frame = {
+		v: PROTOCOL_VERSION,
+		op: 'hello-ack',
+		cell,
+		role,
+		serverTs,
+		coarse,
+		cfg: { distanceBucketM, bearingBucketDeg, proximityRadiusM, handleRotationS, minAccuracyM, quietVisibility },
 	};
+	if (typeof pair === 'string') frame.pair = pair;
+	return { ok: true, frame };
 }
 
 /**

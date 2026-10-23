@@ -232,3 +232,20 @@ export function speechForMarker(d, locale) {
 export function speechForAggregate(counts, locale) {
 	return { kind: 'speech', priority: 50, text: dict(locale).summary(counts.open, counts.quiet) };
 }
+
+/**
+ * Roster intents for place rooms: no distance, no bearing — everyone is
+ * here. One line per visible member ("Open", "Quiet"), join order.
+ *
+ * @param {import('./types.js').MarkerEntry[]} markers
+ * @param {string} locale
+ * @returns {RenderIntent[]}
+ */
+export function rosterIntents(markers, locale) {
+	const L = dict(locale);
+	return markers.map((m) => ({
+		kind: /** @type {'text_line'} */ ('text_line'),
+		priority: 50,
+		text: L.states[m.state],
+	}));
+}

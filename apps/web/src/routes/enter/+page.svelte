@@ -66,13 +66,20 @@
 		}
 	}
 
+	/** Same-origin path guard for the post-entry redirect (blocks //host). */
+	function safeRedirect() {
+		const target = new URLSearchParams(window.location.search).get('redirect') ?? '/hub';
+		if (target.startsWith('/') && !target.startsWith('//')) return target;
+		return '/hub';
+	}
+
 	function enter() {
 		if (!consented || !token) return;
 		// Keys read by the presence client runtime (session storage only):
 		// consent + the single-use Turnstile token for the hello frame.
 		sessionStorage.setItem('urbaninversion.consent', 'true');
 		sessionStorage.setItem('urbaninversion.turnstile', token);
-		window.location.href = '/hub';
+		window.location.href = safeRedirect();
 	}
 </script>
 

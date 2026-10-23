@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateSessionKeyPair, bytesToB64Url } from '../src/index.js';
-import { parseClientFrame } from '../src/validation.js';
+import { parseClientFrame, parseServerFrame } from '../src/validation.js';
 import { defaultConfig } from '../src/config.js';
 
 const cfg = defaultConfig;
@@ -54,5 +54,52 @@ describe('parseClientFrame — hello pair ticket (glasses pairing)', () => {
 			const hello = await pairHello({ turnstile: undefined, pair: /** @type {any} */ (bad) });
 			expect(code(parseClientFrame(JSON.stringify(hello), cfg))).toBe('bad_frame');
 		}
+	});
+});
+
+
+describe('parseServerFrame — hello-ack session ticket', () => {
+	it('accepts an ack carrying a rotated ticket', () => {
+		const ack = {
+			v: 1,
+			op: 'hello-ack',
+			cell: 'u33d8v',
+			role: 'home',
+			serverTs: Date.now(),
+			coarse: false,
+			pair: 'pt_abcdefghij1234567890abcdefghij123',
+			cfg: {
+				distanceBucketM: 10,
+				bearingBucketDeg: 45,
+				proximityRadiusM: 60,
+				handleRotationS: 120,
+				minAccuracyM: 50,
+				quietVisibility: 'everyone',
+			},
+		};
+		const r = parseServerFrame(JSON.stringify(ack), defaultConfig);
+		expect(r.ok).toBe(true);
+		if (r.ok) expect(r.frame.pair).toBe('pt_abcdefghij1234567890abcdefghij123');
+	});
+
+	it('accepts a place-cell ack and rejects malformed tickets', () => {
+		const base = {
+			v: 1,
+			op: 'hello-ack',
+			cell: 'place:cafe-aurora',
+			role: 'home',
+			serverTs: Date.now(),
+			coarse: false,
+			cfg: {
+				distanceBucketM: 10,
+				bearingBucketDeg: 45,
+				proximityRadiusM: 60,
+				handleRotationS: 120,
+				minAccuracyM: 50,
+				quietVisibility: 'everyone',
+			},
+		};
+		expect(parseServerFrame(JSON.stringify(base), defaultConfig).ok).toBe(true);
+		expect(parseServerFrame(JSON.stringify({ ...base, pair: 'nope' }), defaultConfig).ok).toBe(false);
 	});
 });

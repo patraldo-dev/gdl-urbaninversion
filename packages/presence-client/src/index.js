@@ -4,6 +4,7 @@ export {
 	describeMarker,
 	speechForMarker,
 	speechForAggregate,
+	rosterIntents,
 } from '@urbaninversion/shared';
 export { PresenceClient } from './client.js';
 export { presenceStore } from './store.js';

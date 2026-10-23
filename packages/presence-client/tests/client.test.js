@@ -87,3 +87,48 @@ describe('PresenceClient hello', () => {
 		});
 	});
 });
+
+
+describe('PresenceClient ticket adoption', () => {
+	it('adopts the ack-rotated ticket for future hellos', async () => {
+		const client = new PresenceClient({ cfg: defaultConfig });
+		await client.start();
+		await client.updatePosition({ lat: 52.52, lon: 13.405, accuracy: 5, tsMs: Date.now() });
+		const home = FakeWebSocket.instances.at(-1);
+		home.simulateConnected();
+		await vi.waitFor(() => {
+			expect(home.sent.find((f) => f.op === 'hello')).toBeDefined();
+		});
+		// Server ack carrying a fresh ticket.
+		const ack = JSON.stringify({
+			v: 1,
+			op: 'hello-ack',
+			cell: 'u33dc0',
+			role: 'home',
+			serverTs: Date.now(),
+			coarse: false,
+			pair: 'pt_rotatedticket1234567890abcdefgh',
+			cfg: {
+				distanceBucketM: 10,
+				bearingBucketDeg: 45,
+				proximityRadiusM: 60,
+				handleRotationS: 120,
+				minAccuracyM: 50,
+				quietVisibility: 'everyone',
+			},
+		});
+		home.listeners.get('message')?.({ data: ack });
+		expect(client.pairTicket).toBe('pt_rotatedticket1234567890abcdefgh');
+		// The next socket (e.g. joinPlace) hellos with the ticket, not turnstile.
+		client.joinPlace('cafe-aurora');
+		const place = FakeWebSocket.instances.at(-1);
+		place.simulateConnected();
+		await vi.waitFor(() => {
+			const hello = place.sent.find((f) => f.op === 'hello');
+			expect(hello).toBeDefined();
+			expect(hello.pair).toBe('pt_rotatedticket1234567890abcdefgh');
+			expect(hello.turnstile).toBeUndefined();
+			expect(hello.cell).toBe('place:cafe-aurora');
+		});
+	});
+});

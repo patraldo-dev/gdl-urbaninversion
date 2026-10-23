@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION, decodeGeohash, haversineM, isGeoSanityEnabled, isValidGeohash } from '@urbaninversion/shared';
+import { PROTOCOL_VERSION, decodeGeohash, haversineM, isGeoSanityEnabled, isValidGeohash, isPlaceCell } from '@urbaninversion/shared';
 import { presenceConfig } from './env.js';
 import { verifyTurnstile } from './turnstile.js';
 
@@ -7,6 +7,7 @@ import { verifyTurnstile } from './turnstile.js';
 export { PresenceCell } from './do/presence-cell.js';
 export { MetricsRollup } from './do/metrics-rollup.js';
 export { PairingDO } from './do/pairing.js';
+export { PlacesDO } from './do/places.js';
 
 /**
  * Presence Worker: the /api/* and /ws surface.
@@ -100,10 +101,44 @@ export default /** @type {ExportedHandler<import('./env.js').Env>} */ ({
 			const code = url.searchParams.get('code') ?? '';
 			return pairProxy(env, `/status?code=${encodeURIComponent(code)}`, request);
 		}
+		if (url.pathname === '/api/places' && request.method === 'POST') {
+			return placesProxy(env, '/create', request);
+		}
+		if (url.pathname === '/api/places/nearby' && request.method === 'GET') {
+			const lat = url.searchParams.get('lat') ?? '';
+			const lon = url.searchParams.get('lon') ?? '';
+			return placesProxy(env, `/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, request);
+		}
+		if (url.pathname === '/api/places/search' && request.method === 'GET') {
+			const q = url.searchParams.get('q') ?? '';
+			return placesProxy(env, `/search?q=${encodeURIComponent(q)}`, request);
+		}
 		if (url.pathname.startsWith('/api/')) return json({ error: 'not_found' }, 404, cors);
 		return json({ error: 'not_found' }, 404);
 	},
 });
+
+/**
+ * Forward to the global PlacesDO with the trusted client IP attached.
+ * @param {import('./env.js').Env} env
+ * @param {string} path
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+async function placesProxy(env, path, request) {
+	const stub = env.PLACES.get(env.PLACES.idFromName('global'));
+	/** @type {RequestInit} */
+	const init = { method: request.method };
+	const headers = new Headers();
+	const ip = request.headers.get('cf-connecting-ip') ?? '';
+	if (ip) headers.set('x-ui-client-ip', ip);
+	if (request.method === 'POST') {
+		headers.set('content-type', 'application/json');
+		init.body = await request.text();
+	}
+	init.headers = headers;
+	return stub.fetch(new Request(new URL(path, 'https://do'), init));
+}
 
 /**
  * Forward to the global PairingDO with the trusted client IP attached.
@@ -167,14 +202,14 @@ async function upgradeWebSocket(request, env, cfg, url) {
 	}
 
 	const cell = url.searchParams.get('cell') ?? '';
-	if (!isValidGeohash(cell, cfg.GEOHASH_PRECISION)) {
+	if (!isValidGeohash(cell, cfg.GEOHASH_PRECISION) && !isPlaceCell(cell)) {
 		return json({ error: 'bad_cell' }, 400);
 	}
 
 	// Optional anti-spoof sanity check (default off — Phase 1 correction 5).
 	// Coarse IP-geolocation vs claimed cell center; catches gross country-
 	// scale spoofing only. Residual risk accepted and documented.
-	if (isGeoSanityEnabled(cfg)) {
+	if (isGeoSanityEnabled(cfg) && !isPlaceCell(cell)) {
 		const cfLat = request.cf?.latitude;
 		const cfLon = request.cf?.longitude;
 		if (typeof cfLat === 'string' && typeof cfLon === 'string') {
