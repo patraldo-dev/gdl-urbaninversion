@@ -16,9 +16,9 @@
   }
   .panel-root { flex-direction: column; width: 344px; }
   .panel-content { align-items: flex-start; flex-direction: column; padding-top: 12px; padding-left: 24px; padding-right: 24px; }
-  .heading { height: 32px; font-size: 20px; font-weight: 700; line-height: 24px; color: #272727; }
+  .heading { font-family: 'UIInter'; height: 32px; font-size: 20px; font-weight: 700; line-height: 24px; color: #272727; }
   .heading:dark { color: rgba(255, 255, 255, 0.9); }
-  .status { font-size: 13px; line-height: 17px; color: #a35b00; margin-top: 4px; display: none; }
+  .status { font-family: 'UIInter'; font-size: 13px; line-height: 17px; color: #a35b00; margin-top: 4px; display: none; }
   .status:dark { color: #ffc46b; }
   .button { justify-content: flex-start; margin-left: 24px; margin-right: 24px; margin-top: 12px; }
   .button-last { margin-bottom: 24px; }
