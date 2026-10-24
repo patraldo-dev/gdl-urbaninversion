@@ -124,5 +124,7 @@
 	"hub.place_share": "Partager ce lieu",
 	"hub.place_copy": "Copier le lien",
 	"hub.place_copied": "Lien copié !",
-	"hub.place_scan_hint": "D'autres scannent pour rejoindre — sans app, sans compte."
+	"hub.place_scan_hint": "D'autres scannent pour rejoindre — sans app, sans compte.",
+	"hub.place_osm_credit": "Lieux à proximité © contributeurs OpenStreetMap",
+	"hub.place_none_nearby": "Aucun lieu connu ici — nommez-le ci-dessous."
 }

@@ -65,6 +65,17 @@ invented. Clients pick the intents their profile can render.
 | Even Realities G2 | — | planned: Even Hub package (`@evenrealities/even_hub_sdk`), NOT a web app |
 | Android XR / Snap Specs | — | docs-only future adapters; `apps/xr` is the natural spatial base |
 
+## Venue autopopulate (OSM)
+
+Opening the place card geolocates once and merges two sources: rooms
+already in our registry (/api/places/nearby) plus named venues from
+OpenStreetMap queried DIRECTLY from the browser (Overpass is CORS-open;
+it 521s Cloudflare-Workers egress, so no worker proxy — the phone's
+residential IP is the right client). One tap creates the room from the
+venue's own coordinates (idempotent create-dedupe) and joins. Attribution
+per ODbL shown in the UI. Mirrors tried in order with 9 s timeouts;
+empty results fall back to name-it-yourself.
+
 ## Phone→glasses pairing (the glasses never runs a challenge)
 
 Turnstile challenges are awkward on a 600×600 D-pad display, so glasses

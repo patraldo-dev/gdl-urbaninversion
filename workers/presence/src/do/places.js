@@ -19,6 +19,15 @@ const PER_IP_CREATES = 10;
 const PER_IP_WINDOW_MS = 24 * 60 * 60_000;
 const KEY_PREFIX = 'place:';
 
+// overpass-api.de sits behind Cloudflare and 521s Cloudflare-Workers
+// egress; kumi.systems is the primary, the main instance the fallback.
+const OVERPASS_ENDPOINTS = [
+	'https://overpass.kumi.systems/api/interpreter',
+	'https://overpass-api.de/api/interpreter',
+];
+const EXTERN_TTL_MS = 6 * 60 * 60_000;
+const EXTERN_CACHE_MAX = 500;
+
 export class PlacesDO {
 	/** @param {DurableObjectState} state @param {unknown} env */
 	constructor(state, env) {

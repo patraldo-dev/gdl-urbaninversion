@@ -3,6 +3,7 @@ export * from './config.js';
 export * from './types.js';
 export * from './device-profile.js';
 export * from './places.js';
+export * from './places-osm.js';
 export * from './render-intents.js';
 export * from './canonical.js';
 export * from './crypto.js';

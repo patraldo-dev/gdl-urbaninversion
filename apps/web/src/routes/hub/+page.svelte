@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import QRCode from 'qrcode';
+	import { buildOverpassQuery, normalizeOverpassVenues } from '@urbaninversion/shared';
 	import { t, locale } from '#lib/i18n/index.js';
 	import {
 		bootstrapPresence,
@@ -48,32 +49,115 @@
 	let pairStatus = $state('');
 	let pairing = $state(false);
 	let placeName = $state('');
-	let nearbyPlaces = $state(/** @type {{ slug: string, display: string, meters?: number }[]} */ ([]));
+	/** @typedef {{ slug: string, display: string, meters?: number, lat?: number, lon?: number, extern?: boolean }} NearbyPlace */
+	let nearbyPlaces = $state(/** @type {NearbyPlace[]} */ ([]));
 	let placeSearching = $state(false);
 	let showShare = $state(false);
+	let placeSearched = $state(false);
 	let shareQr = $state('');
 	let copied = $state(false);
 
-	/** Look up nearby places with ONE low-accuracy fix (then stop watching). */
+	/** One low-accuracy fix; null when unavailable/denied. */
+	function onceWhereabouts() {
+		return new Promise((resolve) => {
+			navigator.geolocation.getCurrentPosition(
+				(p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+				() => resolve(null),
+				{ enableHighAccuracy: false, timeout: 10_000, maximumAge: 30_000 }
+			);
+		});
+	}
+
+	// Browser-side OSM discovery: Overpass is CORS-open (ACAO *) and blocks
+	// datacenter/worker egress with 521s, so the phone itself queries it —
+	// residential IP, zero worker cost. Memoized ~30 min per ~110 m cell.
+	/** @type {Map<string, { expires: number, venues: { name: string, lat: number, lon: number, kind: string }[] }>} */
+	const osmMemo = new Map();
+	const OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+
+	/** @param {number} lat @param {number} lon */
+	async function fetchOsmVenues(lat, lon) {
+		const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+		const hit = osmMemo.get(key);
+		if (hit && hit.expires > Date.now()) return hit.venues;
+		for (const endpoint of OVERPASS_ENDPOINTS) {
+			const controller = new AbortController();
+			const timer = setTimeout(() => controller.abort(), 9_000);
+			try {
+				const res = await fetch(endpoint, {
+					method: 'POST',
+					body: `data=${encodeURIComponent(buildOverpassQuery(lat, lon))}`,
+					headers: { 'content-type': 'application/x-www-form-urlencoded' },
+					signal: controller.signal
+				});
+				if (!res.ok) continue;
+				const venues = normalizeOverpassVenues(await res.json(), lat, lon);
+				if (osmMemo.size > 100) osmMemo.clear();
+				osmMemo.set(key, { expires: Date.now() + 30 * 60_000, venues });
+				return venues;
+			} catch {
+				// Mirror down/slow: try the next.
+			} finally {
+				clearTimeout(timer);
+			}
+		}
+		return [];
+	}
+
+	/**
+	 * Autopopulate: our registry + OSM venues around the user, merged.
+	 * Registry entries win (already joinable); OSM venues are created on
+	 * tap with the venue's own coordinates.
+	 */
 	async function findNearby() {
 		placeSearching = true;
 		try {
-			const pos = await new Promise((resolve, reject) => {
-				navigator.geolocation.getCurrentPosition(resolve, reject, {
-					enableHighAccuracy: false,
-					timeout: 10_000,
-					maximumAge: 30_000
-				});
-			});
-			const res = await fetch(
-				`/api/places/nearby?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`
+			const where = await onceWhereabouts();
+			if (!where) {
+				nearbyPlaces = [];
+				return;
+			}
+			const [oursRes, osm] = await Promise.all([
+				fetch(`/api/places/nearby?lat=${where.lat}&lon=${where.lon}`),
+				fetchOsmVenues(where.lat, where.lon)
+			]);
+			const ours = (await oursRes.json()).places ?? [];
+			const known = new Set(ours.map((/** @type {{ slug: string }} */ p) => p.slug));
+			const osmFresh = /** @type {NearbyPlace[]} */ (
+				osm
+					.map((/** @type {{ name: string, lat: number, lon: number }} */ v) => ({
+						slug: '',
+						display: v.name,
+						lat: v.lat,
+						lon: v.lon,
+						extern: true
+					}))
+					.filter((/** @type {{ display: string }} */ v) => !known.has(v.display.toLowerCase().replace(/[^a-z0-9]+/g, '-')))
 			);
-			const data = await res.json();
-			nearbyPlaces = data.places ?? [];
+			nearbyPlaces = [...ours, ...osmFresh].slice(0, 15);
 		} catch {
 			nearbyPlaces = [];
 		} finally {
 			placeSearching = false;
+		}
+	}
+
+	/** Join an OSM venue: create the room from the venue's exact coords. */
+	/** @param {NearbyPlace} v */
+	async function joinExternVenue(v) {
+		if (!service) return;
+		try {
+			const res = await fetch('/api/places', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ name: v.display, lat: v.lat, lon: v.lon })
+			});
+			if (!res.ok) throw new Error('create failed');
+			const data = await res.json();
+			service.joinPlace(data.slug);
+			placeName = data.display;
+		} catch {
+			placeName = '';
 		}
 	}
 
@@ -392,7 +476,7 @@
 		{/if}
 	</section>
 {:else}
-	<details class="place">
+	<details class="place" ontoggle={(e) => e.currentTarget.open && !placeSearched && findNearby()}>
 		<summary>{$t('hub.place_title')}</summary>
 		<p class="meta dim">{$t('hub.place_hint')}</p>
 		<h3>{$t('hub.place_nearby')}</h3>
@@ -400,13 +484,20 @@
 			<p class="meta dim">{$t('hub.place_searching')}</p>
 		{:else if nearbyPlaces.length > 0}
 			<ul class="nearby-list">
-				{#each nearbyPlaces as p (p.slug)}
+				{#each nearbyPlaces as p, i (p.extern ? `x${i}` : p.slug)}
 					<li>
-						<button onclick={() => joinPlaceNamed(p.slug, false)}>{$t('hub.place_join')}</button>
+						{#if p.extern}
+							<button onclick={() => joinExternVenue(p)}>{$t('hub.place_join')}</button>
+						{:else}
+							<button onclick={() => joinPlaceNamed(p.slug, false)}>{$t('hub.place_join')}</button>
+						{/if}
 						<span>{p.display}{p.meters != null ? ` · ${p.meters} m` : ''}</span>
 					</li>
 				{/each}
 			</ul>
+			<p class="osm-credit">{$t('hub.place_osm_credit')}</p>
+		{:else if placeSearched}
+			<p class="meta dim">{$t('hub.place_none_nearby')}</p>
 		{/if}
 		<button class="find" onclick={findNearby}>{$t('hub.place_nearby')}</button>
 		<div class="pair-row">
@@ -671,6 +762,12 @@
 		color: #fff;
 		font-weight: 600;
 		cursor: pointer;
+	}
+	.osm-credit {
+		font-size: 0.72rem;
+		color: var(--muted);
+		opacity: 0.75;
+		margin: 0.2rem 0 0.2rem;
 	}
 	.place .find {
 		margin: 0.3rem 0 0.6rem;
